@@ -7,7 +7,7 @@ func StrategyBasicBot(ship Ship, gameMap Map) string {
 
 	for i := 0; i < len(planets); i++ {
 		planet := planets[i]
-		if (planet.Owned == 0 || planet.Owner == gameMap.MyID) && planet.DockedCt < planet.PortCt && planet.ID%2 == ship.ID%2 {
+		if (planet.Owned == 0 || planet.owner == gameMap.MyID) && planet.DockedCt < planet.PortCt && planet.id%2 == ship.id%2 {
 			if msg, err := ship.Dock(planet); err == nil {
 				return msg
 			}

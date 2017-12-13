@@ -6,33 +6,30 @@ import (
 	"strconv"
 )
 
-// DockingStatus represents possible ship.DockingStatus values
-type DockingStatus int
+// ShipStatus represents possible ship states.
+type ShipStatus int
 
 const (
-	// Undocked ship.DockingStatus value
-	Undocked DockingStatus = iota
-	// Docking ship.DockingStatus value
+	// ShipStatus states.
+	Undocked ShipStatus = iota
 	Docking
-	// Docked ship.DockingStatus value
 	Docked
-	// Undocking ship.DockingStatus value
 	Undocking
 )
 
 // Entity captures spacial and ownership state for Planets and Ships
 type Entity struct {
-	X      float64
-	Y      float64
+	id     int
+	owner  int
+	x      float64
+	y      float64
 	radius float64
-	Health float64
-	Owner  int
-	ID     int
+	health float64
 }
 
 // Coords returns the current x and y coordinates.
 func (e Entity) Coords() (float64, float64) {
-	return e.X, e.Y
+	return e.x, e.y
 }
 
 // Sweep returns the current radius.
@@ -45,8 +42,8 @@ func (e Entity) Width() float64 {
 	return e.radius * 2
 }
 
-// PlanetEnv object from which Halite is mined
-type PlanetEnv struct {
+// Planet object from which Halite is mined
+type Planet struct {
 	Entity
 	PortCt        float64
 	DockedCt      float64
@@ -58,8 +55,8 @@ type PlanetEnv struct {
 	Distance      float64
 }
 
-// NewPlanetEnv from a slice of game state tokens
-func NewPlanetEnv(tokens []string) (PlanetEnv, []string) {
+// MakePlanet from a slice of game state tokens
+func MakePlanet(tokens []string) (Planet, []string) {
 	id, _ := strconv.Atoi(tokens[0])
 	x, _ := strconv.ParseFloat(tokens[1], 64)
 	y, _ := strconv.ParseFloat(tokens[2], 64)
@@ -73,15 +70,15 @@ func NewPlanetEnv(tokens []string) (PlanetEnv, []string) {
 	dockedCt, _ := strconv.ParseFloat(tokens[10], 64)
 
 	pEnt := Entity{
-		X:      x,
-		Y:      y,
+		x:      x,
+		y:      y,
 		radius: radius,
-		Health: health,
-		Owner:  owner,
-		ID:     id,
+		health: health,
+		owner:  owner,
+		id:     id,
 	}
 
-	p := PlanetEnv{
+	p := Planet{
 		PortCt:        portCt,
 		DockedCt:      dockedCt,
 		ProdRate:      prodRate,
@@ -107,14 +104,14 @@ type Ship struct {
 	VelY float64
 
 	PlanetID        int
-	PlanetEnv       PlanetEnv
-	DockingStatus   DockingStatus
+	PlanetEnv       Planet
+	DockingStatus   ShipStatus
 	DockingProgress float64
 	WeaponCooldown  float64
 }
 
-// ParseShip from a slice of game state tokens
-func ParseShip(playerID int, tokens []string) (Ship, []string) {
+// MakeShip from a slice of game state tokens
+func MakeShip(playerID int, tokens []string) (Ship, []string) {
 	shipID, _ := strconv.Atoi(tokens[0])
 	shipX, _ := strconv.ParseFloat(tokens[1], 64)
 	shipY, _ := strconv.ParseFloat(tokens[2], 64)
@@ -127,12 +124,12 @@ func ParseShip(playerID int, tokens []string) (Ship, []string) {
 	shipWeaponCooldown, _ := strconv.ParseFloat(tokens[9], 64)
 
 	shipEntity := Entity{
-		X:      shipX,
-		Y:      shipY,
+		x:      shipX,
+		y:      shipY,
 		radius: .5,
-		Health: shipHealth,
-		Owner:  playerID,
-		ID:     shipID,
+		health: shipHealth,
+		owner:  playerID,
+		id:     shipID,
 	}
 
 	ship := Ship{
@@ -149,8 +146,8 @@ func ParseShip(playerID int, tokens []string) (Ship, []string) {
 }
 
 // IntToDockingStatus converts an int to a DockingStatus
-func IntToDockingStatus(i int) DockingStatus {
-	statuses := [4]DockingStatus{Undocked, Docking, Docked, Undocking}
+func IntToDockingStatus(i int) ShipStatus {
+	statuses := [4]ShipStatus{Undocked, Docking, Docked, Undocking}
 	return statuses[i]
 }
 
@@ -163,23 +160,23 @@ func (ship Ship) Thrust(magnitude float64, angle float64) string {
 		boundedAngle = int(math.Ceil(angle - .5))
 	}
 	boundedAngle = ((boundedAngle % 360) + 360) % 360
-	return fmt.Sprintf("t %s %s %s", strconv.Itoa(ship.ID), strconv.Itoa(int(magnitude)), strconv.Itoa(boundedAngle))
+	return fmt.Sprintf("t %s %s %s", strconv.Itoa(ship.id), strconv.Itoa(int(magnitude)), strconv.Itoa(boundedAngle))
 }
 
 // Dock generates a string describing the ship's intension to dock during the current turn
-func (ship Ship) Dock(planet PlanetEnv) (string, error) {
+func (ship Ship) Dock(planet Planet) (string, error) {
 	isClose := Distance(ship, planet) <= (ship.radius + planet.radius + 4)
 
 	if !isClose {
 		return "", fmt.Errorf("cannot dock")
 	}
 
-	return fmt.Sprintf("d %d %d", ship.ID, planet.ID), nil
+	return fmt.Sprintf("d %d %d", ship.id, planet.id), nil
 }
 
 // Undock generates a string describing the ship's intension to undock during the current turn
 func (ship Ship) Undock() string {
-	return fmt.Sprintf("u %s", strconv.Itoa(ship.ID))
+	return fmt.Sprintf("u %s", strconv.Itoa(ship.id))
 }
 
 // NavigateBasic demonstrates how the player might move ships through space
@@ -206,10 +203,10 @@ func (ship Ship) Navigate(target Entity, gameMap Map) string {
 		return ship.NavigateBasic(target, gameMap)
 	}
 
-	x0 := math.Min(ship.X, target.X)
-	x2 := math.Max(ship.X, target.X)
-	y0 := math.Min(ship.Y, target.Y)
-	y2 := math.Max(ship.Y, target.Y)
+	x0 := math.Min(ship.x, target.x)
+	x2 := math.Max(ship.x, target.x)
+	y0 := math.Min(ship.y, target.y)
+	y2 := math.Max(ship.y, target.y)
 
 	dx := (x2 - x0) / 5
 	dy := (y2 - y0) / 5
@@ -219,12 +216,12 @@ func (ship Ship) Navigate(target Entity, gameMap Map) string {
 	for x1 := x0; x1 <= x2; x1 += dx {
 		for y1 := y0; y1 <= y2; y1 += dy {
 			intermediateTarget := Entity{
-				X:      x1,
-				Y:      y1,
+				x:      x1,
+				y:      y1,
 				radius: 0,
-				Health: 0,
-				Owner:  0,
-				ID:     -1,
+				health: 0,
+				owner:  0,
+				id:     -1,
 			}
 			ob1 := gameMap.ObstaclesBetween(ship.Entity, intermediateTarget)
 			if !ob1 {

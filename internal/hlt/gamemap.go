@@ -10,7 +10,7 @@ import (
 // Map describes the current state of the game
 type Map struct {
 	MyID, Width, Height int
-	Planets             []PlanetEnv
+	Planets             []Planet
 	Players             []Player
 	Entities            []Entity
 }
@@ -21,8 +21,8 @@ type Player struct {
 	Ships []Ship
 }
 
-// ParsePlayer from a slice of game state tokens
-func ParsePlayer(tokens []string) (Player, []string) {
+// MakePlayer from a slice of game state tokens
+func MakePlayer(tokens []string) (Player, []string) {
 	playerID, _ := strconv.Atoi(tokens[0])
 	playerNumShips, _ := strconv.ParseFloat(tokens[1], 64)
 
@@ -33,7 +33,7 @@ func ParsePlayer(tokens []string) (Player, []string) {
 
 	tokens = tokens[2:]
 	for i := 0; float64(i) < playerNumShips; i++ {
-		ship, tokensnew := ParseShip(playerID, tokens)
+		ship, tokensnew := MakeShip(playerID, tokens)
 		tokens = tokensnew
 		player.Ships = append(player.Ships, ship)
 	}
@@ -51,13 +51,13 @@ func ParseGameString(c *Connection, gameString string) Map {
 		MyID:     c.PlayerTag,
 		Width:    c.width,
 		Height:   c.height,
-		Planets:  make([]PlanetEnv, 0),
+		Planets:  make([]Planet, 0),
 		Players:  make([]Player, numPlayers),
 		Entities: make([]Entity, 0),
 	}
 
 	for i := 0; i < numPlayers; i++ {
-		player, tokensnew := ParsePlayer(tokens)
+		player, tokensnew := MakePlayer(tokens)
 		tokens = tokensnew
 		gameMap.Players[player.ID] = player
 		for j := 0; j < len(player.Ships); j++ {
@@ -69,7 +69,7 @@ func ParseGameString(c *Connection, gameString string) Map {
 	tokens = tokens[1:]
 
 	for i := 0; i < numPlanets; i++ {
-		planet, tokensnew := NewPlanetEnv(tokens)
+		planet, tokensnew := MakePlanet(tokens)
 		tokens = tokensnew
 		gameMap.Planets = append(gameMap.Planets, planet)
 		gameMap.Entities = append(gameMap.Entities, planet.Entity)
@@ -81,10 +81,10 @@ func ParseGameString(c *Connection, gameString string) Map {
 // ObstaclesBetween demonstrates how the player might determine if the path
 // between two enitities is clear
 func (gameMap Map) ObstaclesBetween(start Entity, end Entity) bool {
-	x1 := start.X
-	y1 := start.Y
-	x2 := end.X
-	y2 := end.Y
+	x1 := start.x
+	y1 := start.y
+	x2 := end.x
+	y2 := end.y
 	dx := x2 - x1
 	dy := y2 - y1
 	a := dx*dx + dy*dy + 1e-8
@@ -92,12 +92,12 @@ func (gameMap Map) ObstaclesBetween(start Entity, end Entity) bool {
 
 	for i := 0; i < len(gameMap.Entities); i++ {
 		entity := gameMap.Entities[i]
-		if entity.ID == start.ID || entity.ID == end.ID {
+		if entity.x == start.x || entity.x == end.x {
 			continue
 		}
 
-		x0 := entity.X
-		y0 := entity.Y
+		x0 := entity.x
+		y0 := entity.y
 
 		closestDistance := Distance(end, entity)
 		if closestDistance < entity.radius+1 {
@@ -111,8 +111,8 @@ func (gameMap Map) ObstaclesBetween(start Entity, end Entity) bool {
 			continue
 		}
 
-		closestX := start.X + dx*t
-		closestY := start.Y + dy*t
+		closestX := start.x + dx*t
+		closestY := start.y + dy*t
 		closestDistance = math.Sqrt(math.Pow(closestX-x0, 2) * +math.Pow(closestY-y0, 2))
 
 		if closestDistance <= entity.radius+start.radius+1 {
@@ -124,7 +124,7 @@ func (gameMap Map) ObstaclesBetween(start Entity, end Entity) bool {
 
 // NearestPlanetsByDistance orders all planets based on their proximity
 // to a given ship from nearest for farthest
-func (gameMap Map) NearestPlanetsByDistance(ship Ship) []PlanetEnv {
+func (gameMap Map) NearestPlanetsByDistance(ship Ship) []Planet {
 	planets := gameMap.Planets
 
 	for i := 0; i < len(planets); i++ {
@@ -136,7 +136,7 @@ func (gameMap Map) NearestPlanetsByDistance(ship Ship) []PlanetEnv {
 	return planets
 }
 
-type byDist []PlanetEnv
+type byDist []Planet
 
 func (a byDist) Len() int           { return len(a) }
 func (a byDist) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }

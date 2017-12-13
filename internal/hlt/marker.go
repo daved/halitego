@@ -64,11 +64,11 @@ func NearestPoint(a, b Marker, minDistance float64) Entity {
 	y := by + dist*math.Sin(angle)
 
 	return Entity{
-		X:      x,
-		Y:      y,
+		x:      x,
+		y:      y,
 		radius: 0,
-		Health: 0,
-		Owner:  -1,
-		ID:     -1,
+		health: 0,
+		owner:  -1,
+		id:     -1,
 	}
 }
