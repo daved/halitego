@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -9,42 +8,44 @@ import (
 	"github.com/daved/halitefred/internal/hlt"
 )
 
-// golang starter kit with logging and basic pathfinding
-// Arjun Viswanathan 2017 / github arjunvis
-
 func main() {
+	botName := "Fred The SpaceGopher"
 	logging := true
-	botName := "GoBot"
+	logFileSuffix := "_gamelog.log"
 
 	conn := hlt.NewConnection(botName)
 
-	// set up logging
 	if logging {
-		fname := strconv.Itoa(conn.PlayerTag) + "_gamelog.log"
-		f, err := os.OpenFile(fname, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+		fname := strconv.Itoa(conn.PlayerTag) + logFileSuffix
+
+		f, err := os.OpenFile(fname, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0664)
 		if err != nil {
-			fmt.Printf("error opening file: %v\n", err)
+			panic(err)
 		}
-		defer f.Close()
+		defer func() {
+			if err := f.Close(); err != nil {
+				panic(err)
+			}
+		}()
+
 		log.SetOutput(f)
 	}
-	gameMap := conn.UpdateMap()
-	gameturn := 1
-	for true {
-		gameMap = conn.UpdateMap()
-		commandQueue := []string{}
 
-		myPlayer := gameMap.Players[gameMap.MyID]
-		myShips := myPlayer.Ships
+	for i := 1; ; i++ {
+		gmap := conn.UpdateMap()
+		env := gmap.Players[gmap.MyID]
 
-		for i := 0; i < len(myShips); i++ {
-			ship := myShips[i]
-			if ship.DockingStatus == hlt.Undocked {
-				commandQueue = append(commandQueue, hlt.StrategyBasicBot(ship, gameMap))
+		cmds := []string{}
+		for k := range env.Ships {
+			s := env.Ships[k]
+
+			if s.DockingStatus == hlt.Undocked {
+				cmds = append(cmds, hlt.StrategyBasicBot(s, gmap))
 			}
 		}
-		log.Printf("Turn %v\n", gameturn)
-		conn.SubmitCommands(commandQueue)
-		gameturn++
+
+		log.Printf("Turn %v\n", i)
+
+		conn.SubmitCommands(cmds)
 	}
 }
