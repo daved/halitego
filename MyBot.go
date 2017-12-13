@@ -6,7 +6,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/daved/halitefred/src/hlt"
+	"github.com/daved/halitefred/internal/hlt"
 )
 
 // golang starter kit with logging and basic pathfinding
