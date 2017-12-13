@@ -6,7 +6,7 @@ import (
 	"os"
 	"strconv"
 
-	"./src/hlt"
+	"github.com/daved/halitefred/src/hlt"
 )
 
 // golang starter kit with logging and basic pathfinding
@@ -39,7 +39,7 @@ func main() {
 
 		for i := 0; i < len(myShips); i++ {
 			ship := myShips[i]
-			if ship.DockingStatus == hlt.UNDOCKED {
+			if ship.DockingStatus == hlt.Undocked {
 				commandQueue = append(commandQueue, hlt.StrategyBasicBot(ship, gameMap))
 			}
 		}

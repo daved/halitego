@@ -7,11 +7,12 @@ func StrategyBasicBot(ship Ship, gameMap Map) string {
 
 	for i := 0; i < len(planets); i++ {
 		planet := planets[i]
-		if (planet.Owned == 0 || planet.Owner == gameMap.MyID) && planet.NumDockedShips < planet.NumDockingSpots && planet.ID%2 == ship.ID%2 {
-			if ship.CanDock(planet) {
-				return ship.Dock(planet)
+		if (planet.Owned == 0 || planet.Owner == gameMap.MyID) && planet.DockedCt < planet.PortCt && planet.ID%2 == ship.ID%2 {
+			if msg, err := ship.Dock(planet); err == nil {
+				return msg
 			}
-			return ship.Navigate(ship.ClosestPointTo(planet.Entity, 3), gameMap)
+
+			return ship.Navigate(NearestPoint(ship, planet, 3), gameMap)
 		}
 	}
 

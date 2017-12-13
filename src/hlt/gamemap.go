@@ -10,7 +10,7 @@ import (
 // Map describes the current state of the game
 type Map struct {
 	MyID, Width, Height int
-	Planets             []Planet
+	Planets             []PlanetEnv
 	Players             []Player
 	Entities            []Entity
 }
@@ -51,7 +51,7 @@ func ParseGameString(c *Connection, gameString string) Map {
 		MyID:     c.PlayerTag,
 		Width:    c.width,
 		Height:   c.height,
-		Planets:  make([]Planet, 0),
+		Planets:  make([]PlanetEnv, 0),
 		Players:  make([]Player, numPlayers),
 		Entities: make([]Entity, 0),
 	}
@@ -69,7 +69,7 @@ func ParseGameString(c *Connection, gameString string) Map {
 	tokens = tokens[1:]
 
 	for i := 0; i < numPlanets; i++ {
-		planet, tokensnew := ParsePlanet(tokens)
+		planet, tokensnew := NewPlanetEnv(tokens)
 		tokens = tokensnew
 		gameMap.Planets = append(gameMap.Planets, planet)
 		gameMap.Entities = append(gameMap.Entities, planet.Entity)
@@ -99,8 +99,8 @@ func (gameMap Map) ObstaclesBetween(start Entity, end Entity) bool {
 		x0 := entity.X
 		y0 := entity.Y
 
-		closestDistance := end.CalculateDistanceTo(entity)
-		if closestDistance < entity.Radius+1 {
+		closestDistance := Distance(end, entity)
+		if closestDistance < entity.radius+1 {
 			return true
 		}
 
@@ -115,7 +115,7 @@ func (gameMap Map) ObstaclesBetween(start Entity, end Entity) bool {
 		closestY := start.Y + dy*t
 		closestDistance = math.Sqrt(math.Pow(closestX-x0, 2) * +math.Pow(closestY-y0, 2))
 
-		if closestDistance <= entity.Radius+start.Radius+1 {
+		if closestDistance <= entity.radius+start.radius+1 {
 			return true
 		}
 	}
@@ -124,12 +124,11 @@ func (gameMap Map) ObstaclesBetween(start Entity, end Entity) bool {
 
 // NearestPlanetsByDistance orders all planets based on their proximity
 // to a given ship from nearest for farthest
-func (gameMap Map) NearestPlanetsByDistance(ship Ship) []Planet {
+func (gameMap Map) NearestPlanetsByDistance(ship Ship) []PlanetEnv {
 	planets := gameMap.Planets
 
 	for i := 0; i < len(planets); i++ {
-
-		planets[i].Distance = ship.CalculateDistanceTo(planets[i].Entity)
+		planets[i].Distance = Distance(ship, planets[i])
 	}
 
 	sort.Sort(byDist(planets))
@@ -137,7 +136,7 @@ func (gameMap Map) NearestPlanetsByDistance(ship Ship) []Planet {
 	return planets
 }
 
-type byDist []Planet
+type byDist []PlanetEnv
 
 func (a byDist) Len() int           { return len(a) }
 func (a byDist) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
