@@ -6,7 +6,7 @@ import (
 	"strconv"
 )
 
-// ShipStatus represents possible ship states.
+// ShipStatus represents possible ship docking states.
 type ShipStatus int
 
 // ShipStatus states.
@@ -17,58 +17,55 @@ const (
 	Undocking
 )
 
-// Ship is a player controlled Entity made for the purpose of doing combat and mining Halite
+// IntToShipStatus converts an int to a ShipStatus.
+func IntToShipStatus(i int) ShipStatus {
+	s := [4]ShipStatus{Undocked, Docking, Docked, Undocking}
+
+	return s[i]
+}
+
+// Ship represents ship state.
 type Ship struct {
 	Entity
-	VelX float64
-	VelY float64
-
-	PlanetID        int
-	PlanetEnv       Planet
-	DockingStatus   ShipStatus
-	DockingProgress float64
-	WeaponCooldown  float64
+	VelX     float64
+	VelY     float64
+	PlanetID int
+	Status   ShipStatus
+	Docking  float64
+	Cooldown float64
 }
 
 // MakeShip from a slice of game state tokens
 func MakeShip(playerID int, tokens []string) (Ship, []string) {
-	shipID, _ := strconv.Atoi(tokens[0])
-	shipX, _ := strconv.ParseFloat(tokens[1], 64)
-	shipY, _ := strconv.ParseFloat(tokens[2], 64)
-	shipHealth, _ := strconv.ParseFloat(tokens[3], 64)
-	shipVelX, _ := strconv.ParseFloat(tokens[4], 64)
-	shipVelY, _ := strconv.ParseFloat(tokens[5], 64)
-	shipDockingStatus, _ := strconv.Atoi(tokens[6])
-	shipPlanetID, _ := strconv.Atoi(tokens[7])
-	shipDockingProgress, _ := strconv.ParseFloat(tokens[8], 64)
-	shipWeaponCooldown, _ := strconv.ParseFloat(tokens[9], 64)
+	id, _ := strconv.Atoi(tokens[0])
+	x, _ := strconv.ParseFloat(tokens[1], 64)
+	y, _ := strconv.ParseFloat(tokens[2], 64)
+	health, _ := strconv.ParseFloat(tokens[3], 64)
+	velX, _ := strconv.ParseFloat(tokens[4], 64)
+	velY, _ := strconv.ParseFloat(tokens[5], 64)
+	status, _ := strconv.Atoi(tokens[6])
+	planetID, _ := strconv.Atoi(tokens[7])
+	docking, _ := strconv.ParseFloat(tokens[8], 64)
+	cooldown, _ := strconv.ParseFloat(tokens[9], 64)
 
-	shipEntity := Entity{
-		x:      shipX,
-		y:      shipY,
-		radius: .5,
-		health: shipHealth,
-		owner:  playerID,
-		id:     shipID,
+	s := Ship{
+		Entity: Entity{
+			x:      x,
+			y:      y,
+			radius: .5,
+			health: health,
+			owner:  playerID,
+			id:     id,
+		},
+		VelX:     velX,
+		VelY:     velY,
+		PlanetID: planetID,
+		Status:   IntToShipStatus(status),
+		Docking:  docking,
+		Cooldown: cooldown,
 	}
 
-	ship := Ship{
-		PlanetID:        shipPlanetID,
-		DockingStatus:   IntToDockingStatus(shipDockingStatus),
-		DockingProgress: shipDockingProgress,
-		WeaponCooldown:  shipWeaponCooldown,
-		VelX:            shipVelX,
-		VelY:            shipVelY,
-		Entity:          shipEntity,
-	}
-
-	return ship, tokens[10:]
-}
-
-// IntToDockingStatus converts an int to a DockingStatus
-func IntToDockingStatus(i int) ShipStatus {
-	statuses := [4]ShipStatus{Undocked, Docking, Docked, Undocking}
-	return statuses[i]
+	return s, tokens[10:]
 }
 
 // Thrust generates a string describing the ship's intension to move during the current turn
@@ -101,12 +98,12 @@ func (ship Ship) Undock() string {
 
 // NavigateBasic demonstrates how the player might move ships through space
 func (ship Ship) NavigateBasic(target Entity, gameMap Map) string {
-	distance := Distance(ship, target)
-	safeDistance := distance - ship.Entity.radius - target.radius - .1
+	dist := Distance(ship, target)
+	safeDistance := dist - ship.Entity.radius - target.radius - .1
 
-	angle := Direction(ship, target)
+	angle := DegreesTo(ship, target)
 	speed := 7.0
-	if distance < 10 {
+	if dist < 10 {
 		speed = 3.0
 	}
 

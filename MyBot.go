@@ -39,7 +39,7 @@ func main() {
 		for k := range env.Ships {
 			s := env.Ships[k]
 
-			if s.DockingStatus == hlt.Undocked {
+			if s.Status == hlt.Undocked {
 				cmds = append(cmds, hlt.StrategyBasicBot(s, gmap))
 			}
 		}

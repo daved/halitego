@@ -9,7 +9,7 @@ type Planet struct {
 	DockedCt float64
 	ProdRate float64
 	Rsrcs    float64
-	ShipsIDS []int
+	ShipIDs  []int
 	Ships    []Ship
 	Owned    float64
 	Distance float64
@@ -29,30 +29,29 @@ func MakePlanet(tokens []string) (Planet, []string) {
 	owner, _ := strconv.Atoi(tokens[9])
 	dockedCt, _ := strconv.ParseFloat(tokens[10], 64)
 
-	pEnt := Entity{
-		x:      x,
-		y:      y,
-		radius: radius,
-		health: health,
-		owner:  owner,
-		id:     id,
-	}
-
 	p := Planet{
+		Entity: Entity{
+			x:      x,
+			y:      y,
+			radius: radius,
+			health: health,
+			owner:  owner,
+			id:     id,
+		},
 		PortCt:   portCt,
 		DockedCt: dockedCt,
 		ProdRate: prodRate,
 		Rsrcs:    rsrcs,
-		ShipsIDS: nil,
-		Ships:    nil,
 		Owned:    owned,
-		Entity:   pEnt,
 	}
 
-	for i := 0; i < int(dockedCt); i++ {
-		dockedShipID, _ := strconv.Atoi(tokens[11+i])
-		p.ShipsIDS = append(p.ShipsIDS, dockedShipID)
+	shipCt := int(dockedCt)
+
+	for i := 0; i < shipCt; i++ {
+		shipID, _ := strconv.Atoi(tokens[11+i])
+
+		p.ShipIDs = append(p.ShipIDs, shipID)
 	}
 
-	return p, tokens[11+int(dockedCt):]
+	return p, tokens[11+shipCt:]
 }

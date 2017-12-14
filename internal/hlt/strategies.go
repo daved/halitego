@@ -12,7 +12,7 @@ func StrategyBasicBot(ship Ship, gameMap Map) string {
 				return msg
 			}
 
-			return ship.Navigate(NearestPoint(ship, planet, 3), gameMap)
+			return ship.Navigate(Nearest(ship, planet, 3), gameMap)
 		}
 	}
 

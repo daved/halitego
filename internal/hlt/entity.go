@@ -44,7 +44,7 @@ func (e Entity) Width() float64 {
 	return e.radius * 2
 }
 
-// Distance returns the distance between two instances of Locator.
+// Distance returns the Distance between two instances of Locator.
 func Distance(a, b Locator) float64 {
 	ax, ay := a.Coords()
 	bx, by := b.Coords()
@@ -59,13 +59,15 @@ func distanceBetween(ax, ay, bx, by float64) float64 {
 	return math.Sqrt(dx*dx + dy*dy)
 }
 
-// Direction returns an angle in degrees to the target.
-func Direction(a, b Locator) float64 {
-	return RadToDeg(DirectionRadians(a, b))
+// DegreesTo returns an angle in degrees that Locator "a" must rotate in order
+// to face Locator "b".
+func DegreesTo(a, b Locator) float64 {
+	return RadToDeg(RadiansTo(a, b))
 }
 
-// DirectionRadians returns an angle in radians to the target
-func DirectionRadians(a, b Locator) float64 {
+// RadiansTo returns an angle in radians that Locator "a" must rotate in order
+// to face Locator "b".
+func RadiansTo(a, b Locator) float64 {
 	ax, ay := a.Coords()
 	bx, by := b.Coords()
 
@@ -79,10 +81,11 @@ func radiansToFacing(ax, ay, bx, by float64) float64 {
 	return math.Atan2(dy, dx)
 }
 
-// NearestPoint returns the closest point that is at least minDistance from the target
-func NearestPoint(a, b Marker, minDistance float64) Entity {
-	dist := Distance(a, b) - b.Sweep() - minDistance
-	angle := DirectionRadians(b, a)
+// Nearest returns the closest point from Marker "a" to Marker "b" that is at
+// least a distance of "min" from Marker "b".
+func Nearest(a, b Marker, min float64) Entity {
+	dist := Distance(a, b) - b.Sweep() - min
+	angle := RadiansTo(b, a)
 
 	bx, by := b.Coords()
 	x := bx + dist*math.Cos(angle)
