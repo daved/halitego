@@ -1,6 +1,10 @@
-# halitefred
+# halitego
 
-    go get -u github.com/daved/halitefred
+    go get -u github.com/daved/halitego
+
+# halitego (Install Bots)
+
+    go get -u github.com/daved/halitego/...
 
 ## Useful Aliases
 
@@ -11,5 +15,4 @@
     alias hliterun="gobuild && haliterun '300 200' \$(buildfile)"
     alias hliterunsmall="gobuild && haliterun '240 160' \$(buildfile)"
     alias hliterunlarge="gobuild && haliterun '384 256' \$(buildfile)"
-    alias hliteclear="rm ./*gamelog.log ./replay*.hlt"
-
+    alias hliteclear="rm ./*game.log ./replay*.hlt 2>/dev/null"

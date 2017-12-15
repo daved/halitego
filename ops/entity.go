@@ -1,4 +1,4 @@
-package hlt
+package ops
 
 import "math"
 
@@ -21,27 +21,27 @@ type Marker interface {
 
 // Entity represents common attributes shared by items in a game map.
 type Entity struct {
-	id     int
-	owner  int
-	x      float64
-	y      float64
-	radius float64
-	health float64
+	ID     int
+	Owner  int
+	X      float64
+	Y      float64
+	Radius float64
+	Health float64
 }
 
 // Coords returns the current x and y coordinates.
 func (e Entity) Coords() (float64, float64) {
-	return e.x, e.y
+	return e.X, e.Y
 }
 
 // Sweep returns the current radius.
 func (e Entity) Sweep() float64 {
-	return e.radius
+	return e.Radius
 }
 
 // Width returns the current diameter.
 func (e Entity) Width() float64 {
-	return e.radius * 2
+	return e.Radius * 2
 }
 
 // Distance returns the Distance between two instances of Locator.
@@ -92,11 +92,11 @@ func Nearest(a, b Marker, min float64) Entity {
 	y := by + dist*math.Sin(angle)
 
 	return Entity{
-		x:      x,
-		y:      y,
-		radius: 0,
-		health: 0,
-		owner:  -1,
-		id:     -1,
+		X:      x,
+		Y:      y,
+		Radius: 0,
+		Health: 0,
+		Owner:  -1,
+		ID:     -1,
 	}
 }
