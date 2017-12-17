@@ -54,7 +54,7 @@ func (f *Fred) StrategyBasicBot(ship ops.Ship, gameMap ops.Board) string {
 				return msg
 			}
 
-			return ship.Navigate(ops.Nearest(ship, planet, 3), gameMap)
+			return fredShip{ship}.Navigate(ops.Nearest(ship, planet, 3), gameMap)
 		}
 	}
 

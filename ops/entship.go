@@ -78,8 +78,8 @@ func (ship Ship) Undock() string {
 	return fmt.Sprintf("u %s", strconv.Itoa(ship.ID))
 }
 
-// NavigateBasic demonstrates how the player might move ships through space
-func (ship Ship) NavigateBasic(target Entity, gameMap Board) string {
+// NavigateTo demonstrates how the player might move ships through space
+func (ship Ship) NavigateTo(target Entity, gameMap Board) string {
 	dist := Distance(ship, target)
 	safeDistance := dist - ship.Entity.Radius - target.Radius - .1
 
@@ -91,53 +91,6 @@ func (ship Ship) NavigateBasic(target Entity, gameMap Board) string {
 
 	speed = math.Min(speed, safeDistance)
 	return ship.Thrust(speed, angle)
-}
-
-// Navigate demonstrates how the player might negotiate obsticles between
-// a ship and its target
-func (ship Ship) Navigate(target Entity, gameMap Board) string {
-	ob := gameMap.ObstaclesBetween(ship.Entity, target)
-
-	if !ob {
-		return ship.NavigateBasic(target, gameMap)
-	}
-
-	x0 := math.Min(ship.X, target.X)
-	x2 := math.Max(ship.X, target.X)
-	y0 := math.Min(ship.Y, target.Y)
-	y2 := math.Max(ship.Y, target.Y)
-
-	dx := (x2 - x0) / 5
-	dy := (y2 - y0) / 5
-	bestdist := 1000.0
-	bestTarget := target
-
-	for x1 := x0; x1 <= x2; x1 += dx {
-		for y1 := y0; y1 <= y2; y1 += dy {
-			intermediateTarget := Entity{
-				X:      x1,
-				Y:      y1,
-				Radius: 0,
-				Health: 0,
-				Owner:  0,
-				ID:     -1,
-			}
-			ob1 := gameMap.ObstaclesBetween(ship.Entity, intermediateTarget)
-			if !ob1 {
-				ob2 := gameMap.ObstaclesBetween(intermediateTarget, target)
-				if !ob2 {
-					totdist := math.Sqrt(math.Pow(x1-x0, 2)+math.Pow(y1-y0, 2)) + math.Sqrt(math.Pow(x1-x2, 2)+math.Pow(y1-y2, 2))
-					if totdist < bestdist {
-						bestdist = totdist
-						bestTarget = intermediateTarget
-
-					}
-				}
-			}
-		}
-	}
-
-	return ship.NavigateBasic(bestTarget, gameMap)
 }
 
 // IntToShipStatus converts an int to a ShipStatus.
