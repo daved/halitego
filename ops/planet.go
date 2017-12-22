@@ -9,7 +9,6 @@ type Planet struct {
 	Rsrcs    float64
 	ShipIDs  []int
 	Owned    float64
-	Distance float64
 }
 
 // MakePlanet from a slice of game state tokens

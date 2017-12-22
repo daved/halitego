@@ -44,48 +44,32 @@ func (e Entity) Width() float64 {
 	return e.Radius * 2
 }
 
-// Distance returns the Distance between two instances of Locator.
-func Distance(a, b Locator) float64 {
-	ax, ay := a.Coords()
+// Distance returns the Distance between two instances of Locator types.
+func Distance(b, a Locator) float64 {
 	bx, by := b.Coords()
-
-	return distanceBetween(ax, ay, bx, by)
-}
-
-func distanceBetween(ax, ay, bx, by float64) float64 {
-	dx := bx - ax
-	dy := by - ay
-
-	return math.Sqrt(dx*dx + dy*dy)
-}
-
-// DegreesTo returns an angle in degrees that Locator "a" must rotate in order
-// to face Locator "b".
-func DegreesTo(a, b Locator) float64 {
-	return RadToDeg(RadiansTo(a, b))
-}
-
-// RadiansTo returns an angle in radians that Locator "a" must rotate in order
-// to face Locator "b".
-func RadiansTo(a, b Locator) float64 {
 	ax, ay := a.Coords()
-	bx, by := b.Coords()
 
-	return radiansToFacing(ax, ay, bx, by)
+	return distanceBetween(bx, by, ax, ay)
 }
 
-func radiansToFacing(ax, ay, bx, by float64) float64 {
-	dx := bx - ax
-	dy := by - ay
+// Degrees returns the angle in degrees between two instances of Locator types.
+func Degrees(b, a Locator) float64 {
+	return radiansToDegrees(Radians(b, a))
+}
 
-	return math.Atan2(dy, dx)
+// Radians returns the angle in radians between two instances of Locator types.
+func Radians(b, a Locator) float64 {
+	bx, by := b.Coords()
+	ax, ay := a.Coords()
+
+	return radiansBetween(bx, by, ax, ay)
 }
 
 // Nearest returns the closest point from Marker "a" to Marker "b" that is at
 // least a distance of "min" from Marker "b".
-func Nearest(a, b Marker, min float64) Entity {
+func Nearest(min float64, b, a Marker) Entity {
 	dist := Distance(a, b) - b.Sweep() - min
-	angle := RadiansTo(b, a)
+	angle := Radians(b, a)
 
 	bx, by := b.Coords()
 	x := bx + dist*math.Cos(angle)
@@ -99,4 +83,22 @@ func Nearest(a, b Marker, min float64) Entity {
 		Owner:  -1,
 		ID:     -1,
 	}
+}
+
+func distanceBetween(bx, by, ax, ay float64) float64 {
+	dx := ax - bx
+	dy := ay - by
+
+	return math.Sqrt(dx*dx + dy*dy)
+}
+
+func radiansBetween(bx, by, ax, ay float64) float64 {
+	dx := bx - ax
+	dy := by - ay
+
+	return math.Atan2(dy, dx)
+}
+
+func radiansToDegrees(r float64) float64 {
+	return r / math.Pi * 180
 }

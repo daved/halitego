@@ -17,7 +17,7 @@ type Logger interface {
 
 // Commander ...
 type Commander interface {
-	Cmds(Board) []fmt.Stringer
+	Command(Board) []Messenger
 }
 
 // Operations ...
@@ -27,59 +27,76 @@ type Operations struct {
 	yLen int
 	r    *bufio.Reader
 	w    io.Writer
+	done chan struct{}
 }
 
 // New ...
 func New(botName string) *Operations {
-	c := &Operations{
-		r: bufio.NewReader(os.Stdin),
-		w: os.Stdout,
+	o := &Operations{
+		r:    bufio.NewReader(os.Stdin),
+		w:    os.Stdout,
+		done: make(chan struct{}),
 	}
 
-	c.id = c.readLineInt()
-	c.xLen, c.yLen = c.readLineInts()
+	o.id = o.readLineInt()
+	o.xLen, o.yLen = o.readLineInts()
 
-	c.send(botName)
+	o.send(botName)
 
-	return c
+	return o
 }
 
 // ID ...
-func (ctrl *Operations) ID() int {
-	return ctrl.id
+func (o *Operations) ID() int {
+	return o.id
+}
+
+// Stop ...
+func (o *Operations) Stop() {
+	select {
+	case <-o.done:
+	default:
+		close(o.done)
+	}
+}
+
+// Wait ...
+func (o *Operations) Wait() {
+	<-o.done
 }
 
 // Run gathers and submits game commands to the GameCommunicator.
-func (ctrl *Operations) Run(done <-chan struct{}, l Logger, c Commander) {
+func (o *Operations) Run(l Logger, c Commander) {
 	for i := 1; ; i++ {
 		select {
-		case <-done:
+		case <-o.done:
 			return
 		default:
-			ctrl.runIteration(l, c, i)
+			o.runIteration(l, i, c)
 		}
 	}
 }
 
-func (ctrl *Operations) runIteration(l Logger, c Commander, iter int) {
+func (o *Operations) runIteration(l Logger, iter int, c Commander) {
 	l.Printf("--- Turn %v\n", iter)
 
-	b := ctrl.board()
+	b := MakeBoard(o.xLen, o.yLen, o.readLineString())
 	l.Printf("   Parsed Board")
 
-	cmds := c.Cmds(b)
+	ms := c.Command(b)
 
-	m := cmdsToMsg(cmds)
-	l.Printf("   Sending Message: %s\n", m)
-	ctrl.send(m)
+	m := messengersToSysMsg(ms)
+	l.Printf("   System Message: %s\n", m)
+
+	o.send(m)
 }
 
-func (ctrl *Operations) send(msg string) {
-	fmt.Fprintf(ctrl.w, "%s\n", msg)
+func (o *Operations) send(msg string) {
+	fmt.Fprintf(o.w, "%s\n", msg)
 }
 
-func (ctrl *Operations) readLine() []byte {
-	bs, err := ctrl.r.ReadBytes('\n')
+func (o *Operations) readLine() []byte {
+	bs, err := o.r.ReadBytes('\n')
 	if err != nil {
 		panic(err)
 	}
@@ -87,12 +104,12 @@ func (ctrl *Operations) readLine() []byte {
 	return bytes.TrimSpace(bs)
 }
 
-func (ctrl *Operations) readLineString() string {
-	return string(ctrl.readLine())
+func (o *Operations) readLineString() string {
+	return string(o.readLine())
 }
 
-func (ctrl *Operations) readLineInt() int {
-	i, err := strconv.Atoi(ctrl.readLineString())
+func (o *Operations) readLineInt() int {
+	i, err := strconv.Atoi(o.readLineString())
 	if err != nil {
 		panic(err)
 	}
@@ -100,8 +117,8 @@ func (ctrl *Operations) readLineInt() int {
 	return i
 }
 
-func (ctrl *Operations) readLineInts() (int, int) {
-	xy := strings.Split(ctrl.readLineString(), " ")
+func (o *Operations) readLineInts() (int, int) {
+	xy := strings.Split(o.readLineString(), " ")
 
 	x, err := strconv.Atoi(xy[0])
 	if err != nil {
@@ -113,23 +130,4 @@ func (ctrl *Operations) readLineInts() (int, int) {
 	}
 
 	return x, y
-}
-
-func (ctrl *Operations) board() Board {
-	s := ctrl.readLineString()
-
-	return MakeBoard(ctrl.xLen, ctrl.yLen, s)
-}
-
-func cmdsToMsg(cmds []fmt.Stringer) string {
-	s := ""
-	for _, v := range cmds {
-		s += v.String() + " "
-	}
-
-	if len(s) < 1 {
-		return ""
-	}
-
-	return s[:len(s)-1]
 }

@@ -32,12 +32,11 @@ func main() {
 		defer setLoggerOutput(l, fn)()
 	}
 
-	done := make(chan struct{})
 	sm.Set(func(*sigmon.SignalMonitor) {
-		close(done)
+		o.Stop()
 	})
 
-	o.Run(done, l, c)
+	o.Run(l, c)
 	sm.Stop()
 }
 
