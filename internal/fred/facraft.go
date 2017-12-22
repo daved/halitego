@@ -3,6 +3,7 @@ package fred
 import (
 	"math"
 
+	"github.com/daved/halitego/geom"
 	"github.com/daved/halitego/ops"
 )
 
@@ -16,7 +17,7 @@ func makeFACraft(s ops.Ship) faCraft {
 
 // Navigate demonstrates how the player might negotiate obsticles between
 // a ship and its target
-func (c faCraft) Navigate(target ops.Marker, f field) ops.CommandMessenger {
+func (c faCraft) Navigate(target geom.Marker, f field) ops.CommandMessenger {
 	ob := f.ObstaclesBetween(c.Entity, target)
 
 	if !ob {
@@ -38,7 +39,7 @@ func (c faCraft) Navigate(target ops.Marker, f field) ops.CommandMessenger {
 
 	for x1 := x0; x1 <= x2; x1 += dx {
 		for y1 := y0; y1 <= y2; y1 += dy {
-			intermediateTarget := ops.MakeLocation(x1, x2)
+			intermediateTarget := geom.MakeLocation(x1, x2, 0)
 			ob1 := f.ObstaclesBetween(c.Entity, intermediateTarget)
 			if !ob1 {
 				ob2 := f.ObstaclesBetween(intermediateTarget, target)
@@ -72,7 +73,7 @@ func (bot *Fred) messenger(f field, c faCraft) ops.CommandMessenger {
 				return msg
 			}
 
-			return c.Navigate(c.Nearest(3, p), f)
+			return c.Navigate(geom.Nearest(3, p, c), f)
 		}
 	}
 

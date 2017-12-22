@@ -1,5 +1,7 @@
 package ops
 
+import "github.com/daved/halitego/geom"
+
 // Planet object from which Halite is mined
 type Planet struct {
 	Entity
@@ -15,10 +17,12 @@ type Planet struct {
 func makePlanet(tokens []string) (Planet, []string) {
 	p := Planet{
 		Entity: Entity{
+			Location: geom.MakeLocation(
+				readTokenFloat(tokens, 1),
+				readTokenFloat(tokens, 2),
+				readTokenFloat(tokens, 4),
+			),
 			id:     readTokenInt(tokens, 0),
-			x:      readTokenFloat(tokens, 1),
-			y:      readTokenFloat(tokens, 2),
-			radius: readTokenFloat(tokens, 4),
 			health: readTokenFloat(tokens, 3),
 			owner:  readTokenInt(tokens, 9),
 		},

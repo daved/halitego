@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 
+	"github.com/daved/halitego/geom"
 	"github.com/daved/halitego/ops/internal/msg"
 )
 
@@ -40,10 +41,12 @@ type Ship struct {
 func makeShip(playerID int, tokens []string) (Ship, []string) {
 	s := Ship{
 		Entity: Entity{
+			Location: geom.MakeLocation(
+				readTokenFloat(tokens, 1),
+				readTokenFloat(tokens, 2),
+				0.5,
+			),
 			id:     readTokenInt(tokens, 0),
-			x:      readTokenFloat(tokens, 1),
-			y:      readTokenFloat(tokens, 2),
-			radius: 0.5,
 			health: readTokenFloat(tokens, 3),
 			owner:  playerID,
 		},
@@ -70,7 +73,7 @@ func (ship Ship) NoOp() msg.NoOp {
 
 // Dock generates a string describing the ship's intension to dock during the current turn
 func (ship Ship) Dock(planet Planet) (msg.Dock, error) {
-	isClose := ship.Distance(planet) <= (ship.radius + planet.radius + 4)
+	isClose := geom.Distance(planet, ship) <= (ship.Radius() + planet.Radius() + 4)
 
 	var err error
 	if !isClose {
@@ -86,11 +89,11 @@ func (ship Ship) Undock() msg.Undock {
 }
 
 // NavigateTo demonstrates how the player might move ships through space
-func (ship Ship) NavigateTo(target Marker, gameMap Board) msg.Thrust {
-	dist := ship.Distance(target)
-	safeDistance := dist - ship.Entity.Radius() - target.Radius() - .1
+func (ship Ship) NavigateTo(target geom.Marker, gameMap Board) msg.Thrust {
+	dist := geom.Distance(target, ship)
+	safeDistance := dist - ship.Radius() - target.Radius() - .1
 
-	angle := ship.Degrees(target)
+	angle := geom.Degrees(target, ship)
 	speed := 7.0
 	if dist < 10 {
 		speed = 3.0
