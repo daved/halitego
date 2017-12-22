@@ -3,22 +3,24 @@ package ops
 import (
 	"fmt"
 	"math"
+
+	"github.com/daved/halitego/ops/internal/msg"
 )
 
-// ShipStatus represents possible ship docking states.
-type ShipStatus int
+// ShipDockingStatus represents possible ship docking states.
+type ShipDockingStatus int
 
-// ShipStatus states.
+// ShipDockingStatus states.
 const (
-	Undocked ShipStatus = iota
+	Undocked ShipDockingStatus = iota
 	Docking
 	Docked
 	Undocking
 )
 
-// MakeShipStatus converts an int to a ShipStatus.
-func MakeShipStatus(i int) ShipStatus {
-	s := [4]ShipStatus{Undocked, Docking, Docked, Undocking}
+// makeShipStatus converts an int to a ShipStatus.
+func makeShipStatus(i int) ShipDockingStatus {
+	s := [4]ShipDockingStatus{Undocked, Docking, Docked, Undocking}
 
 	return s[i]
 }
@@ -29,26 +31,26 @@ type Ship struct {
 	VelX     float64
 	VelY     float64
 	PlanetID int
-	Status   ShipStatus
+	SDStatus ShipDockingStatus
 	Docking  float64
 	Cooldown float64
 }
 
-// MakeShip from a slice of game state tokens
-func MakeShip(playerID int, tokens []string) (Ship, []string) {
+// makeShip from a slice of game state tokens
+func makeShip(playerID int, tokens []string) (Ship, []string) {
 	s := Ship{
 		Entity: Entity{
-			ID:     readTokenInt(tokens, 0),
-			X:      readTokenFloat(tokens, 1),
-			Y:      readTokenFloat(tokens, 2),
-			Radius: 0.5,
-			Health: readTokenFloat(tokens, 3),
-			Owner:  playerID,
+			id:     readTokenInt(tokens, 0),
+			x:      readTokenFloat(tokens, 1),
+			y:      readTokenFloat(tokens, 2),
+			radius: 0.5,
+			health: readTokenFloat(tokens, 3),
+			owner:  playerID,
 		},
 		VelX:     readTokenFloat(tokens, 4),
 		VelY:     readTokenFloat(tokens, 5),
 		PlanetID: readTokenInt(tokens, 7),
-		Status:   MakeShipStatus(readTokenInt(tokens, 6)),
+		SDStatus: makeShipStatus(readTokenInt(tokens, 6)),
 		Docking:  readTokenFloat(tokens, 8),
 		Cooldown: readTokenFloat(tokens, 9),
 	}
@@ -56,34 +58,39 @@ func MakeShip(playerID int, tokens []string) (Ship, []string) {
 	return s, tokens[10:]
 }
 
+// DockingStatus ...
+func (ship Ship) DockingStatus() ShipDockingStatus {
+	return ship.SDStatus
+}
+
 // NoOp ...
-func (ship Ship) NoOp() NoOpMsg {
-	return makeNoOpMsg()
+func (ship Ship) NoOp() msg.NoOp {
+	return msg.MakeNoOp()
 }
 
 // Dock generates a string describing the ship's intension to dock during the current turn
-func (ship Ship) Dock(planet Planet) (DockMsg, error) {
-	isClose := Distance(ship, planet) <= (ship.Radius + planet.Radius + 4)
+func (ship Ship) Dock(planet Planet) (msg.Dock, error) {
+	isClose := ship.Distance(planet) <= (ship.radius + planet.radius + 4)
 
 	var err error
 	if !isClose {
 		err = fmt.Errorf("cannot dock")
 	}
 
-	return makeDockMsg(ship.ID, planet.ID), err
+	return msg.MakeDock(ship.id, planet.id), err
 }
 
 // Undock generates a string describing the ship's intension to undock during the current turn
-func (ship Ship) Undock() UndockMsg {
-	return makeUndockMsg(ship.ID)
+func (ship Ship) Undock() msg.Undock {
+	return msg.MakeUndock(ship.id)
 }
 
 // NavigateTo demonstrates how the player might move ships through space
-func (ship Ship) NavigateTo(target Entity, gameMap Board) ThrustMsg {
-	dist := Distance(ship, target)
-	safeDistance := dist - ship.Entity.Radius - target.Radius - .1
+func (ship Ship) NavigateTo(target Marker, gameMap Board) msg.Thrust {
+	dist := ship.Distance(target)
+	safeDistance := dist - ship.Entity.Radius() - target.Radius() - .1
 
-	angle := Degrees(ship, target)
+	angle := ship.Degrees(target)
 	speed := 7.0
 	if dist < 10 {
 		speed = 3.0
@@ -94,7 +101,7 @@ func (ship Ship) NavigateTo(target Entity, gameMap Board) ThrustMsg {
 }
 
 // thrust generates a string describing the ship's intension to move during the current turn
-func (ship Ship) thrust(magnitude float64, angle float64) ThrustMsg {
+func (ship Ship) thrust(magnitude float64, angle float64) msg.Thrust {
 	bounded := int(math.Ceil(angle - .5))
 
 	if angle > 0.0 {
@@ -103,5 +110,5 @@ func (ship Ship) thrust(magnitude float64, angle float64) ThrustMsg {
 
 	bounded = ((bounded % 360) + 360) % 360
 
-	return makeThrustMsg(ship.ID, int(magnitude), bounded)
+	return msg.MakeThrust(ship.id, int(magnitude), bounded)
 }

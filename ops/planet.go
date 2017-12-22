@@ -11,16 +11,16 @@ type Planet struct {
 	Owned    float64
 }
 
-// MakePlanet from a slice of game state tokens
-func MakePlanet(tokens []string) (Planet, []string) {
+// makePlanet from a slice of game state tokens
+func makePlanet(tokens []string) (Planet, []string) {
 	p := Planet{
 		Entity: Entity{
-			ID:     readTokenInt(tokens, 0),
-			X:      readTokenFloat(tokens, 1),
-			Y:      readTokenFloat(tokens, 2),
-			Radius: readTokenFloat(tokens, 4),
-			Health: readTokenFloat(tokens, 3),
-			Owner:  readTokenInt(tokens, 9),
+			id:     readTokenInt(tokens, 0),
+			x:      readTokenFloat(tokens, 1),
+			y:      readTokenFloat(tokens, 2),
+			radius: readTokenFloat(tokens, 4),
+			health: readTokenFloat(tokens, 3),
+			owner:  readTokenInt(tokens, 9),
 		},
 		PortCt:   readTokenFloat(tokens, 5),
 		DockedCt: readTokenFloat(tokens, 10),

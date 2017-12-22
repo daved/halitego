@@ -13,8 +13,8 @@ type Board struct {
 	ss   [][]Ship
 }
 
-// MakeBoard from a slice of game state tokens
-func MakeBoard(xLen, yLen int, gameData string) Board {
+// makeBoard from a slice of game state tokens
+func makeBoard(xLen, yLen int, gameData string) Board {
 	tokens := strings.Split(gameData, " ")
 	pCt := readTokenInt(tokens, 0)
 	tokens = tokens[1:]
@@ -35,7 +35,7 @@ func MakeBoard(xLen, yLen int, gameData string) Board {
 		tokens = tokens[2:]
 
 		for i := 0; i < shipCt; i++ {
-			s, trimmedTokens := MakeShip(k, tokens)
+			s, trimmedTokens := makeShip(k, tokens)
 			tokens = trimmedTokens
 
 			b.ss[k] = append(b.ss[k], s)
@@ -46,7 +46,7 @@ func MakeBoard(xLen, yLen int, gameData string) Board {
 	tokens = tokens[1:]
 
 	for i := 0; i < plntCt; i++ {
-		p, trimmedTokens := MakePlanet(tokens)
+		p, trimmedTokens := makePlanet(tokens)
 		tokens = trimmedTokens
 
 		b.ps = append(b.ps, p)

@@ -8,6 +8,8 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/daved/halitego/ops/internal/msg"
 )
 
 // Logger describes the halitego logging behavior.
@@ -15,9 +17,17 @@ type Logger interface {
 	Printf(format string, v ...interface{})
 }
 
+// CommandMessenger ...
+type CommandMessenger interface {
+	msg.Messenger
+}
+
+// CommandMessengers ...
+type CommandMessengers msg.Messengers
+
 // Commander ...
 type Commander interface {
-	Command(Board) []Messenger
+	Command(Board) CommandMessengers
 }
 
 // Operations ...
@@ -80,15 +90,13 @@ func (o *Operations) Run(l Logger, c Commander) {
 func (o *Operations) runIteration(l Logger, iter int, c Commander) {
 	l.Printf("--- Turn %v\n", iter)
 
-	b := MakeBoard(o.xLen, o.yLen, o.readLineString())
+	b := makeBoard(o.xLen, o.yLen, o.readLineString())
 	l.Printf("   Parsed Board")
 
-	ms := c.Command(b)
+	sm := msg.Messengers(c.Command(b)).Message()
+	l.Printf("   System Message: %s\n", sm)
 
-	m := messengersToSysMsg(ms)
-	l.Printf("   System Message: %s\n", m)
-
-	o.send(m)
+	o.send(sm)
 }
 
 func (o *Operations) send(msg string) {
@@ -130,4 +138,30 @@ func (o *Operations) readLineInts() (int, int) {
 	}
 
 	return x, y
+}
+
+func readTokenString(tokens []string, k int) string {
+	if k >= len(tokens) {
+		panic("index out of token range")
+	}
+
+	return tokens[k]
+}
+
+func readTokenInt(tokens []string, k int) int {
+	n, err := strconv.Atoi(readTokenString(tokens, k))
+	if err != nil {
+		panic(err)
+	}
+
+	return n
+}
+
+func readTokenFloat(tokens []string, k int) float64 {
+	n, err := strconv.ParseFloat(readTokenString(tokens, k), 64)
+	if err != nil {
+		panic(err)
+	}
+
+	return n
 }

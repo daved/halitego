@@ -17,36 +17,32 @@ func makeField(b ops.Board) field {
 
 // ObstaclesBetween demonstrates how the player might determine if the path
 // between two enitities is clear
-func (f field) ObstaclesBetween(a ops.Entity, b ops.Entity) bool {
-	x1 := a.X
-	y1 := a.Y
-	x2 := b.X
-	y2 := b.Y
+func (f field) ObstaclesBetween(a, b ops.Marker) bool {
+	x1, y1 := a.Coords()
+	x2, y2 := b.Coords()
 	dx := x2 - x1
 	dy := y2 - y1
 	ptA := dx*dx + dy*dy + 1e-8
 	crossterms := x1*x1 - x1*x2 + y1*y1 - y1*y2
 
-	var es []ops.Entity
+	var es []ops.Marker
 	for _, v := range f.Planets() {
-		es = append(es, v.Entity)
+		es = append(es, v)
 	}
 	for _, v := range f.Ships() {
 		for _, y := range v {
-			es = append(es, y.Entity)
+			es = append(es, y)
 		}
 	}
 
 	for _, e := range es {
-		if e.X == a.X || e.X == b.X {
+		x0, y0 := e.Coords()
+		if x0 == x1 || x0 == x2 {
 			continue
 		}
 
-		x0 := e.X
-		y0 := e.Y
-
-		closestDistance := ops.Distance(b, e)
-		if closestDistance < e.Radius+1 {
+		closestDistance := e.Distance(b)
+		if closestDistance < e.Radius()+1 {
 			return true
 		}
 
@@ -57,11 +53,11 @@ func (f field) ObstaclesBetween(a ops.Entity, b ops.Entity) bool {
 			continue
 		}
 
-		closestX := a.X + dx*t
-		closestY := a.Y + dy*t
+		closestX := x1 + dx*t
+		closestY := x2 + dy*t
 		closestDistance = math.Sqrt(math.Pow(closestX-x0, 2) * +math.Pow(closestY-y0, 2))
 
-		if closestDistance <= e.Radius+a.Radius+1 {
+		if closestDistance <= e.Radius()+a.Radius()+1 {
 			return true
 		}
 	}
@@ -90,7 +86,7 @@ func makePlanetScans(ps []ops.Planet, l ops.Locator) planetScans {
 	for _, p := range ps {
 		psc := planetScan{
 			Planet: p,
-			dist:   ops.Distance(l, p),
+			dist:   p.Distance(l),
 		}
 		pscs = append(pscs, psc)
 	}
