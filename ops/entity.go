@@ -25,8 +25,3 @@ func (e Entity) Owner() int {
 func (e Entity) Health() float64 {
 	return e.health
 }
-
-// Diameter returns the current diameter.
-func (e Entity) Diameter() float64 {
-	return e.Radius() * 2
-}

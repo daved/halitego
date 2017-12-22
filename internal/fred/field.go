@@ -67,7 +67,7 @@ func (f field) ObstaclesBetween(a, b geom.Marker) bool {
 
 // PlanetsByProximity orders all planets based on their proximity
 // to a given ship from nearest for farthest
-func (f field) PlanetsByProximity(l geom.Locator) []ops.Planet {
+func (f field) PlanetsByProximity(l geom.Marker) []ops.Planet {
 	pscs := makePlanetScans(f.Planets(), l)
 	pscs.sortByDistance()
 
@@ -82,7 +82,7 @@ type planetScan struct {
 
 type planetScans []planetScan
 
-func makePlanetScans(ps []ops.Planet, l geom.Locator) planetScans {
+func makePlanetScans(ps []ops.Planet, l geom.Marker) planetScans {
 	var pscs []planetScan
 	for _, p := range ps {
 		psc := planetScan{

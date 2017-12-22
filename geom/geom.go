@@ -19,11 +19,13 @@ type Marker interface {
 }
 
 // Distance returns the Distance between two instances of Locator types.
-func Distance(b, a Locator) float64 {
+func Distance(b, a Marker) float64 {
 	bx, by := b.Coords()
 	ax, ay := a.Coords()
 
-	return distanceBetween(bx, by, ax, ay)
+	d := distanceBetween(bx, by, ax, ay)
+
+	return d - b.Radius() - a.Radius()
 }
 
 // Degrees returns the angle in degrees between two instances of Locator types.
