@@ -88,8 +88,8 @@ func (ship Ship) Undock() msg.Undock {
 	return msg.MakeUndock(ship.id)
 }
 
-// NavigateTo demonstrates how the player might move ships through space
-func (ship Ship) NavigateTo(target geom.Marker, gameMap Board) msg.Thrust {
+// Navigate demonstrates how the player might move ships through space
+func (ship Ship) Navigate(target geom.Marker, gameMap Board) msg.Thrust {
 	dist := geom.Distance(target, ship)
 	safeDistance := dist - ship.Radius() - target.Radius() - .1
 

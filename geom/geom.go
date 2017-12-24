@@ -1,6 +1,8 @@
 package geom
 
-import "math"
+import (
+	"math"
+)
 
 // Locator describes types which are able to show their coordinates.
 type Locator interface {
@@ -52,6 +54,46 @@ func Nearest(min float64, b, a Marker) Location {
 	y := by + dist*math.Sin(angle)
 
 	return MakeLocation(x, y, 0)
+}
+
+// Obstacles demonstrates how the player might determine if the path
+// between two enitities is clear
+func Obstacles(ms []Marker, b, a Marker) bool {
+	x1, y1 := b.Coords()
+	x2, y2 := a.Coords()
+	dx := x2 - x1
+	dy := y2 - y1
+	ptA := dx*dx + dy*dy + 1e-8
+	crossterms := x1*x1 - x1*x2 + y1*y1 - y1*y2
+
+	for _, e := range ms {
+		x0, y0 := e.Coords()
+		if x0 == x1 || x0 == x2 {
+			continue
+		}
+
+		closestDistance := Distance(a, e)
+		if closestDistance < e.Radius()+1 {
+			return true
+		}
+
+		ptB := -2 * (crossterms + x0*dx + y0*dy)
+		t := -ptB / (2 * ptA)
+
+		if t <= 0 || t >= 1 {
+			continue
+		}
+
+		closestX := x1 + dx*t
+		closestY := x2 + dy*t
+		closestDistance = math.Sqrt(math.Pow(closestX-x0, 2) * +math.Pow(closestY-y0, 2))
+
+		if closestDistance <= e.Radius()+b.Radius()+1 {
+			return true
+		}
+	}
+
+	return false
 }
 
 func distanceBetween(bx, by, ax, ay float64) float64 {

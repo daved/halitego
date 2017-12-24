@@ -2,6 +2,8 @@ package ops
 
 import (
 	"strings"
+
+	"github.com/daved/halitego/geom"
 )
 
 // Board describes the current state of the game
@@ -73,4 +75,19 @@ func (b *Board) Planets() []Planet {
 // Ships ...
 func (b *Board) Ships() [][]Ship {
 	return b.ss
+}
+
+// Markers ...
+func (b *Board) Markers() []geom.Marker {
+	var ms []geom.Marker
+	for _, v := range b.Planets() {
+		ms = append(ms, v)
+	}
+	for _, g := range b.Ships() {
+		for _, v := range g {
+			ms = append(ms, v)
+		}
+	}
+
+	return ms
 }

@@ -18,13 +18,17 @@ func New(id int) *Fred {
 
 // Command ...
 func (bot *Fred) Command(b ops.Board) ops.CommandMessengers {
-	f := makeField(b)
-	ss := f.Ships()[bot.id]
+	bss := b.Ships()
+	if bot.id >= len(bss) {
+		return nil
+	}
 
+	ss := bss[bot.id]
 	var ms ops.CommandMessengers
+
 	for _, s := range ss {
 		c := makeFACraft(s)
-		ms = append(ms, bot.messenger(f, c))
+		ms = append(ms, c.messenger(b))
 	}
 
 	return ms
