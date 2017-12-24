@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/codemodus/sigmon"
-	"github.com/daved/halitego/internal/fred"
+	"github.com/daved/halitego/internal/bot/fred"
 	"github.com/daved/halitego/ops"
 )
 
@@ -25,7 +25,7 @@ func main() {
 
 	l := log.New(ioutil.Discard, "", 0)
 	o := ops.New(name)
-	c := fred.New(o.ID())
+	c := fred.New()
 
 	if verbose {
 		fn := fmt.Sprintf("%d_%s", o.ID(), lFileSfx)

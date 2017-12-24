@@ -27,7 +27,7 @@ type CommandMessengers msg.Messengers
 
 // Commander ...
 type Commander interface {
-	Command(Board) CommandMessengers
+	Command(Board, int) CommandMessengers
 }
 
 // Operations ...
@@ -93,7 +93,9 @@ func (o *Operations) runIteration(l Logger, iter int, c Commander) {
 	b := makeBoard(o.xLen, o.yLen, o.readLineString())
 	l.Printf("   Parsed Board")
 
-	sm := msg.Messengers(c.Command(b)).Message()
+	ms := c.Command(b, o.id)
+
+	sm := msg.Messengers(ms).Message()
 	l.Printf("   System Message: %s\n", sm)
 
 	o.send(sm)

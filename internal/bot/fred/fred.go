@@ -7,17 +7,55 @@ import (
 	"github.com/daved/halitego/ops"
 )
 
-type faCraft struct {
-	ops.Ship
+// Fred ...
+type Fred struct{}
+
+// New ...
+func New() *Fred {
+	return &Fred{}
 }
 
-func makeFACraft(s ops.Ship) faCraft {
-	return faCraft{s}
+// Command ...
+func (bot *Fred) Command(b ops.Board, id int) ops.CommandMessengers {
+	if id >= len(b.Ships()) {
+		return nil
+	}
+
+	ss := b.Ships()[id]
+	var ms ops.CommandMessengers
+
+	for _, s := range ss {
+		ms = append(ms, messenger(b, s))
+	}
+
+	return ms
 }
 
-// order demonstrates how the player might negotiate obsticles between
+// messenger demonstrates how the player might direct their ships
+// in achieving victory
+func messenger(b ops.Board, c ops.Ship) ops.CommandMessenger {
+	if c.SDStatus != ops.Undocked {
+		return c.NoOp()
+	}
+
+	ps := planetsByProximity(b, c)
+
+	for _, p := range ps {
+		if (p.Owned == 0 || p.Owner() == c.Owner()) && p.DockedCt < p.PortCt && p.ID()%2 == c.ID()%2 {
+			if msg, err := c.Dock(p); err == nil {
+				return msg
+			}
+
+			return navTo(b, geom.Nearest(3, p, c), c)
+		}
+	}
+
+	return c.NoOp()
+}
+
+// navTo demonstrates how the player might negotiate obsticles between
 // a ship and its target
-func (c faCraft) order(target geom.Marker, b ops.Board) ops.CommandMessenger {
+func navTo(b ops.Board, target geom.Marker, c ops.Ship) ops.CommandMessenger {
 	ms := b.Markers()
 	ob := geom.Obstacles(ms, c.Entity, target)
 
@@ -57,26 +95,4 @@ func (c faCraft) order(target geom.Marker, b ops.Board) ops.CommandMessenger {
 	}
 
 	return c.Navigate(bestTarget, b)
-}
-
-// messenger demonstrates how the player might direct their ships
-// in achieving victory
-func (c faCraft) messenger(b ops.Board) ops.CommandMessenger {
-	if c.SDStatus != ops.Undocked {
-		return c.NoOp()
-	}
-
-	ps := planetsByProximity(b, c)
-
-	for _, p := range ps {
-		if (p.Owned == 0 || p.Owner() == c.Owner()) && p.DockedCt < p.PortCt && p.ID()%2 == c.ID()%2 {
-			if msg, err := c.Dock(p); err == nil {
-				return msg
-			}
-
-			return c.order(geom.Nearest(3, p, c), b)
-		}
-	}
-
-	return c.NoOp()
 }
