@@ -18,12 +18,11 @@ func New(id int) *Fred {
 
 // Command ...
 func (bot *Fred) Command(b ops.Board) ops.CommandMessengers {
-	bss := b.Ships()
-	if bot.id >= len(bss) {
+	if bot.id >= len(b.Ships()) {
 		return nil
 	}
 
-	ss := bss[bot.id]
+	ss := b.Ships()[bot.id]
 	var ms ops.CommandMessengers
 
 	for _, s := range ss {
