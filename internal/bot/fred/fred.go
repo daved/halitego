@@ -41,7 +41,7 @@ func (bot *Fred) Command(b ops.Board, id int) ops.CommandMessengers {
 // messenger demonstrates how the player might direct their ships
 // in achieving victory
 func (bot *Fred) messenger(b ops.Board, s ops.Ship) ops.CommandMessenger {
-	if s.SDStatus != ops.Undocked {
+	if s.DockingStatus() != ops.Undocked {
 		return s.NoOp()
 	}
 
@@ -92,7 +92,7 @@ func (bot *Fred) navTo(b ops.Board, target geom.Marker, s ops.Ship) ops.CommandM
 	for x1 := x0; x1 <= x2; x1 += dx {
 		for y1 := y0; y1 <= y2; y1 += dy {
 			intermediateTarget := geom.MakeLocation(x1, x2, 0)
-			ob1 := geom.Obstacles(ms, s.Entity, intermediateTarget)
+			ob1 := geom.Obstacles(ms, s, intermediateTarget)
 			if !ob1 {
 				ob2 := geom.Obstacles(ms, intermediateTarget, target)
 				if !ob2 {

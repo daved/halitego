@@ -5,12 +5,12 @@ import "github.com/daved/halitego/geom"
 // Planet object from which Halite is mined
 type Planet struct {
 	Entity
-	PortCt   float64
-	DockedCt float64
-	ProdRate float64
-	Rsrcs    float64
-	ShipIDs  []int
-	Owned    float64
+	portCt   float64
+	dockedCt float64
+	prodRate float64
+	rsrcs    float64
+	shipIDs  []int
+	owned    float64
 }
 
 // makePlanet from a slice of game state tokens
@@ -26,19 +26,19 @@ func makePlanet(tokens []string) (Planet, []string) {
 			health: readTokenFloat(tokens, 3),
 			owner:  readTokenInt(tokens, 9),
 		},
-		PortCt:   readTokenFloat(tokens, 5),
-		DockedCt: readTokenFloat(tokens, 10),
-		ProdRate: readTokenFloat(tokens, 6),
-		Rsrcs:    readTokenFloat(tokens, 7),
-		Owned:    readTokenFloat(tokens, 8),
+		portCt:   readTokenFloat(tokens, 5),
+		dockedCt: readTokenFloat(tokens, 10),
+		prodRate: readTokenFloat(tokens, 6),
+		rsrcs:    readTokenFloat(tokens, 7),
+		owned:    readTokenFloat(tokens, 8),
 	}
 
-	shipCt := int(p.DockedCt)
+	shipCt := int(p.dockedCt)
 
 	for i := 0; i < shipCt; i++ {
 		shipID := readTokenInt(tokens, 11+i)
 
-		p.ShipIDs = append(p.ShipIDs, shipID)
+		p.shipIDs = append(p.shipIDs, shipID)
 	}
 
 	return p, tokens[11+shipCt:]

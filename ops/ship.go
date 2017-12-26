@@ -15,12 +15,12 @@ func makeShipStatus(i int) ShipDockingStatus {
 // Ship represents ship state.
 type Ship struct {
 	Entity
-	VelX     float64
-	VelY     float64
-	PlanetID int
-	SDStatus ShipDockingStatus
-	Docking  float64
-	Cooldown float64
+	velX     float64
+	velY     float64
+	planetID int
+	sdStatus ShipDockingStatus
+	docking  float64
+	cooldown float64
 }
 
 // makeShip from a slice of game state tokens
@@ -36,12 +36,12 @@ func makeShip(playerID int, tokens []string) (Ship, []string) {
 			health: readTokenFloat(tokens, 3),
 			owner:  playerID,
 		},
-		VelX:     readTokenFloat(tokens, 4),
-		VelY:     readTokenFloat(tokens, 5),
-		PlanetID: readTokenInt(tokens, 7),
-		SDStatus: makeShipStatus(readTokenInt(tokens, 6)),
-		Docking:  readTokenFloat(tokens, 8),
-		Cooldown: readTokenFloat(tokens, 9),
+		velX:     readTokenFloat(tokens, 4),
+		velY:     readTokenFloat(tokens, 5),
+		planetID: readTokenInt(tokens, 7),
+		sdStatus: makeShipStatus(readTokenInt(tokens, 6)),
+		docking:  readTokenFloat(tokens, 8),
+		cooldown: readTokenFloat(tokens, 9),
 	}
 
 	return s, tokens[10:]
@@ -49,7 +49,7 @@ func makeShip(playerID int, tokens []string) (Ship, []string) {
 
 // DockingStatus ...
 func (s Ship) DockingStatus() ShipDockingStatus {
-	return s.SDStatus
+	return s.sdStatus
 }
 
 // NoOp ...
@@ -62,8 +62,8 @@ func (s Ship) Dock(p Planet) (msg.Dock, error) {
 	msg := msg.MakeDock(s.id, p.id)
 	err := &DockingErr{
 		junct: geom.CenterDistance(p, s)-p.Radius()-4.0 > 0,
-		right: p.Owned != 0 && p.Owner() != s.Owner(),
-		ports: p.DockedCt >= p.PortCt,
+		right: p.owned != 0 && p.Owner() != s.Owner(),
+		ports: p.dockedCt >= p.portCt,
 	}
 
 	if err.IsError() {
