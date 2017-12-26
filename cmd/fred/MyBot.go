@@ -17,18 +17,12 @@ func main() {
 	})
 	sm.Run()
 
-	var (
-		name     = "Fred The SpaceGopher"
-		verbose  = true
-		lFileSfx = "game.log"
-	)
-
 	l := log.New(ioutil.Discard, "", 0)
-	o := ops.New(name)
+	o := ops.New("Fred The SpaceGopher")
 	c := fred.New(l, o.InitialBoard())
 
-	if verbose {
-		fn := fmt.Sprintf("%d_%s", o.ID(), lFileSfx)
+	if true {
+		fn := fmt.Sprintf("%d_%s", o.ID(), "game.log")
 		defer setLoggerOutput(l, fn)()
 	}
 
