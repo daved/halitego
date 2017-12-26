@@ -1,21 +1,8 @@
 package ops
 
 import (
-	"fmt"
-
 	"github.com/daved/halitego/geom"
 	"github.com/daved/halitego/ops/internal/msg"
-)
-
-// ShipDockingStatus represents possible ship docking states.
-type ShipDockingStatus int
-
-// ShipDockingStatus states.
-const (
-	Undocked ShipDockingStatus = iota
-	Docking
-	Docked
-	Undocking
 )
 
 // makeShipStatus converts an int to a ShipStatus.
@@ -72,10 +59,24 @@ func (s Ship) NoOp() msg.NoOp {
 
 // Dock generates a string describing the ship's intension to dock during the current turn
 func (s Ship) Dock(p Planet) (msg.Dock, error) {
-	msg := msg.MakeDock(s.id, p.id)
+	err := &DockingErr{}
 
 	if geom.CenterDistance(p, s)-p.Radius()-4.0 > 0 {
-		return msg, fmt.Errorf("cannot dock")
+		err.junct = true
+	}
+
+	if p.Owned != 0 && p.Owner() != s.Owner() {
+		err.right = true
+	}
+
+	if p.DockedCt < p.PortCt {
+		err.ports = true
+	}
+
+	msg := msg.MakeDock(s.id, p.id)
+
+	if err.IsSet() {
+		return msg, err
 	}
 
 	return msg, nil

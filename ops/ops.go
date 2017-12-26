@@ -35,6 +35,7 @@ type Operations struct {
 	id   int
 	xLen int
 	yLen int
+	iniB Board
 	r    *bufio.Reader
 	w    io.Writer
 	done chan struct{}
@@ -50,7 +51,7 @@ func New(botName string) *Operations {
 
 	o.id = o.readLineInt()
 	o.xLen, o.yLen = o.readLineInts()
-	_ = o.readLine() // bleed
+	o.iniB = makeBoard(o.xLen, o.yLen, o.readLineString())
 
 	o.send(botName)
 
@@ -60,6 +61,11 @@ func New(botName string) *Operations {
 // ID ...
 func (o *Operations) ID() int {
 	return o.id
+}
+
+// InitialBoard ...
+func (o *Operations) InitialBoard() Board {
+	return o.iniB
 }
 
 // Stop ...

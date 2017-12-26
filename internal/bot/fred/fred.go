@@ -14,13 +14,15 @@ type Logger interface {
 
 // Fred ...
 type Fred struct {
-	l Logger
+	l    Logger
+	iniB ops.Board
 }
 
 // New ...
-func New(l Logger) *Fred {
+func New(l Logger, initialBoard ops.Board) *Fred {
 	return &Fred{
-		l: l,
+		l:    l,
+		iniB: initialBoard,
 	}
 }
 
@@ -45,13 +47,20 @@ func (bot *Fred) messenger(b ops.Board, s ops.Ship) ops.CommandMessenger {
 
 	ps := planetsByProximity(b, s)
 	for _, p := range ps {
-		if (p.Owned == 0 || p.Owner() == s.Owner()) && p.DockedCt < p.PortCt {
-			if msg, err := s.Dock(p); err == nil {
-				return msg
-			}
+		msg, err := s.Dock(p)
+		if err == nil {
+			return msg
+		}
 
+		derr, ok := err.(ops.DockingError)
+		if ok && (derr.NoRights() || derr.NoPorts()) {
+			continue
+		}
+		if ok && derr.NoJuncture() {
 			return bot.navTo(b, geom.BufferedLocation(0, p, s), s)
 		}
+
+		panic("unexpected error while docking")
 	}
 
 	return s.NoOp()
