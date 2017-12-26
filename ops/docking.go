@@ -14,7 +14,6 @@ const (
 // DockingError ...
 type DockingError interface {
 	error
-	KnownError() bool
 	NoJuncture() bool
 	NoRights() bool
 	NoPorts() bool
@@ -32,8 +31,8 @@ func (e *DockingErr) Error() string {
 	return "cannot dock: " + e.reason()
 }
 
-// IsSet ...
-func (e *DockingErr) IsSet() bool {
+// IsError ...
+func (e *DockingErr) IsError() bool {
 	return e.junct || e.right || e.ports
 }
 
@@ -53,22 +52,19 @@ func (e *DockingErr) NoPorts() bool {
 }
 
 func (e *DockingErr) reason() string {
-	s := ""
+	if !e.IsError() {
+		return "unknown"
+	}
 
+	s := ""
 	if e.junct {
 		s += " no proximity,"
 	}
-
 	if e.right {
 		s += " no permission,"
 	}
-
 	if e.ports {
 		s += " no available port,"
-	}
-
-	if s == "" {
-		return "unknown"
 	}
 
 	return s[1 : len(s)-1]

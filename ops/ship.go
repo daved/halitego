@@ -59,23 +59,14 @@ func (s Ship) NoOp() msg.NoOp {
 
 // Dock generates a string describing the ship's intension to dock during the current turn
 func (s Ship) Dock(p Planet) (msg.Dock, error) {
-	err := &DockingErr{}
-
-	if geom.CenterDistance(p, s)-p.Radius()-4.0 > 0 {
-		err.junct = true
-	}
-
-	if p.Owned != 0 && p.Owner() != s.Owner() {
-		err.right = true
-	}
-
-	if p.DockedCt < p.PortCt {
-		err.ports = true
-	}
-
 	msg := msg.MakeDock(s.id, p.id)
+	err := &DockingErr{
+		junct: geom.CenterDistance(p, s)-p.Radius()-4.0 > 0,
+		right: p.Owned != 0 && p.Owner() != s.Owner(),
+		ports: p.DockedCt >= p.PortCt,
+	}
 
-	if err.IsSet() {
+	if err.IsError() {
 		return msg, err
 	}
 
