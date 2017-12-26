@@ -7,25 +7,30 @@ import (
 	"github.com/daved/halitego/ops"
 )
 
+// Logger describes the halitego logging behavior.
+type Logger interface {
+	Printf(format string, v ...interface{})
+}
+
 // Fred ...
-type Fred struct{}
+type Fred struct {
+	l Logger
+}
 
 // New ...
-func New() *Fred {
-	return &Fred{}
+func New(l Logger) *Fred {
+	return &Fred{
+		l: l,
+	}
 }
 
 // Command ...
 func (bot *Fred) Command(b ops.Board, id int) ops.CommandMessengers {
-	if id >= len(b.Ships()) {
-		return nil
-	}
-
 	ss := b.Ships()[id]
 	var ms ops.CommandMessengers
 
 	for _, s := range ss {
-		ms = append(ms, messenger(b, s))
+		ms = append(ms, bot.messenger(b, s))
 	}
 
 	return ms
@@ -33,38 +38,37 @@ func (bot *Fred) Command(b ops.Board, id int) ops.CommandMessengers {
 
 // messenger demonstrates how the player might direct their ships
 // in achieving victory
-func messenger(b ops.Board, c ops.Ship) ops.CommandMessenger {
-	if c.SDStatus != ops.Undocked {
-		return c.NoOp()
+func (bot *Fred) messenger(b ops.Board, s ops.Ship) ops.CommandMessenger {
+	if s.SDStatus != ops.Undocked {
+		return s.NoOp()
 	}
 
-	ps := planetsByProximity(b, c)
-
+	ps := planetsByProximity(b, s)
 	for _, p := range ps {
-		if (p.Owned == 0 || p.Owner() == c.Owner()) && p.DockedCt < p.PortCt && p.ID()%2 == c.ID()%2 {
-			if msg, err := c.Dock(p); err == nil {
+		if (p.Owned == 0 || p.Owner() == s.Owner()) && p.DockedCt < p.PortCt {
+			if msg, err := s.Dock(p); err == nil {
 				return msg
 			}
 
-			return navTo(b, geom.Nearest(3, p, c), c)
+			return bot.navTo(b, geom.BufferedLocation(0, p, s), s)
 		}
 	}
 
-	return c.NoOp()
+	return s.NoOp()
 }
 
 // navTo demonstrates how the player might negotiate obsticles between
 // a ship and its target
-func navTo(b ops.Board, target geom.Marker, c ops.Ship) ops.CommandMessenger {
+func (bot *Fred) navTo(b ops.Board, target geom.Marker, s ops.Ship) ops.CommandMessenger {
 	ms := b.Markers()
-	ob := geom.Obstacles(ms, c.Entity, target)
+	ob := geom.Obstacles(ms, target, s.Entity)
 
 	if !ob {
-		return c.Navigate(target, b)
+		return s.Navigate(target)
 	}
 
 	tx, ty := target.Coords()
-	cx, cy := c.Coords()
+	cx, cy := s.Coords()
 
 	x0 := math.Min(cx, tx)
 	x2 := math.Max(cx, tx)
@@ -79,7 +83,7 @@ func navTo(b ops.Board, target geom.Marker, c ops.Ship) ops.CommandMessenger {
 	for x1 := x0; x1 <= x2; x1 += dx {
 		for y1 := y0; y1 <= y2; y1 += dy {
 			intermediateTarget := geom.MakeLocation(x1, x2, 0)
-			ob1 := geom.Obstacles(ms, c.Entity, intermediateTarget)
+			ob1 := geom.Obstacles(ms, s.Entity, intermediateTarget)
 			if !ob1 {
 				ob2 := geom.Obstacles(ms, intermediateTarget, target)
 				if !ob2 {
@@ -94,5 +98,5 @@ func navTo(b ops.Board, target geom.Marker, c ops.Ship) ops.CommandMessenger {
 		}
 	}
 
-	return c.Navigate(bestTarget, b)
+	return s.Navigate(bestTarget)
 }

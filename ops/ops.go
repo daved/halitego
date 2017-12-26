@@ -50,6 +50,7 @@ func New(botName string) *Operations {
 
 	o.id = o.readLineInt()
 	o.xLen, o.yLen = o.readLineInts()
+	_ = o.readLine() // bleed
 
 	o.send(botName)
 

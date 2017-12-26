@@ -25,7 +25,7 @@ func main() {
 
 	l := log.New(ioutil.Discard, "", 0)
 	o := ops.New(name)
-	c := fred.New()
+	c := fred.New(l)
 
 	if verbose {
 		fn := fmt.Sprintf("%d_%s", o.ID(), lFileSfx)

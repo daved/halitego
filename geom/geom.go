@@ -20,19 +20,36 @@ type Marker interface {
 	Sizer
 }
 
-// Distance returns the Distance between two instances of Locator types.
-func Distance(b, a Marker) float64 {
+// CenterDistance returns the distance between two instances of Locator types.
+func CenterDistance(b, a Locator) float64 {
 	bx, by := b.Coords()
 	ax, ay := a.Coords()
 
 	d := distanceBetween(bx, by, ax, ay)
 
-	return d - b.Radius() - a.Radius()
+	return d
+}
+
+// EdgeDistance returns the distance between two instances of Locator types.
+func EdgeDistance(b, a Marker) float64 {
+	return CenterDistance(b, a) - b.Radius() - a.Radius()
 }
 
 // Degrees returns the angle in degrees between two instances of Locator types.
 func Degrees(b, a Locator) float64 {
 	return radiansToDegrees(Radians(b, a))
+}
+
+// BoundDegrees ...
+func BoundDegrees(b, a Locator) int {
+	d := Degrees(b, a)
+
+	bd := int(math.Ceil(d - .5))
+	if d > 0.0 {
+		bd = int(math.Floor(d + .5))
+	}
+
+	return ((bd % 360) + 360) % 360
 }
 
 // Radians returns the angle in radians between two instances of Locator types.
@@ -43,15 +60,16 @@ func Radians(b, a Locator) float64 {
 	return radiansBetween(bx, by, ax, ay)
 }
 
-// Nearest returns the closest point from Marker "a" to Marker "b" that is at
+// BufferedLocation returns the closest point from Marker "a" to Marker "b" that is at
 // least a distance of "min" from Marker "b".
-func Nearest(min float64, b, a Marker) Location {
-	dist := Distance(b, a) - b.Radius() - min
-	angle := Radians(b, a)
+func BufferedLocation(buffer float64, b, a Marker) Location {
+	d := EdgeDistance(b, a) - buffer
 
-	bx, by := b.Coords()
-	x := bx + dist*math.Cos(angle)
-	y := by + dist*math.Sin(angle)
+	r := Radians(b, a)
+
+	ax, ay := a.Coords()
+	x := ax + (d * math.Cos(r))
+	y := ay + (d * math.Sin(r))
 
 	return MakeLocation(x, y, 0)
 }
@@ -72,7 +90,7 @@ func Obstacles(ms []Marker, b, a Marker) bool {
 			continue
 		}
 
-		closestDistance := Distance(a, e)
+		closestDistance := EdgeDistance(a, e)
 		if closestDistance < e.Radius()+1 {
 			return true
 		}

@@ -29,7 +29,7 @@ func makePlanetScans(ps []ops.Planet, l geom.Marker) planetScans {
 	for _, p := range ps {
 		psc := planetScan{
 			Planet: p,
-			dist:   geom.Distance(l, p),
+			dist:   geom.EdgeDistance(l, p),
 		}
 		pscs = append(pscs, psc)
 	}
