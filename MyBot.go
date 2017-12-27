@@ -21,7 +21,7 @@ func main() {
 	o := ops.New("Hyena")
 	c := hyena.New(l, o.InitialBoard())
 
-	if true {
+	if false {
 		fn := fmt.Sprintf("%d_%s", o.ID(), "game.log")
 		defer setLoggerOutput(l, fn)()
 	}
