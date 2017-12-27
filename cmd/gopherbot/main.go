@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/codemodus/sigmon"
-	"github.com/daved/halitego/bot/hyena"
+	"github.com/daved/halitego/internal/bot/hyena"
 	"github.com/daved/halitego/ops"
 )
 
