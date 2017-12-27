@@ -49,6 +49,8 @@ func (bot *Fred) messenger(b ops.Board, s ops.Ship) ops.CommandMessenger {
 	}
 
 	ps := planetsByProximity(b, s)
+	striking := bot.allOwned(ps)
+
 	for _, p := range ps {
 		msg, err := s.Dock(p)
 		if err == nil {
@@ -56,14 +58,21 @@ func (bot *Fred) messenger(b ops.Board, s ops.Ship) ops.CommandMessenger {
 		}
 
 		derr, ok := err.(ops.DockingError)
-		if ok && derr.NoRights() || derr.NoPorts() {
-			continue
-		}
-		if ok && derr.NoJuncture() {
-			return bot.nav(b, geom.BufferedLocation(0, p, s), s)
+		if !ok {
+			return s.NoOp()
 		}
 
-		panic("unexpected error while docking")
+		if !striking && (derr.NoPorts() || derr.NoRights()) {
+			continue
+		}
+
+		if striking && !derr.NoRights() {
+			continue
+		}
+
+		if derr.NoJuncture() {
+			return bot.nav(b, geom.BufferedLocation(0, p, s), s)
+		}
 	}
 
 	return s.NoOp()
@@ -85,4 +94,14 @@ func (bot *Fred) nav(b ops.Board, target geom.Marker, s ops.Ship) ops.CommandMes
 
 	pl := geom.PerpindicularLocation(buf, target, s)
 	return bot.nav(b, pl, s)
+}
+
+func (bot *Fred) allOwned(ps []ops.Planet) bool {
+	for _, p := range ps {
+		if !p.Owned() {
+			return false
+		}
+	}
+
+	return true
 }
