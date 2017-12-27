@@ -1,3 +1,4 @@
 *.log
 replay*.hlt
 /vendor
+/src
