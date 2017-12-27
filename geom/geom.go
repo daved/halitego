@@ -64,7 +64,6 @@ func Radians(b, a Locator) float64 {
 // least a distance of "min" from Marker "b".
 func BufferedLocation(buffer float64, b, a Marker) Location {
 	d := EdgeDistance(b, a) - buffer
-
 	r := Radians(b, a)
 
 	ax, ay := a.Coords()
@@ -74,39 +73,52 @@ func BufferedLocation(buffer float64, b, a Marker) Location {
 	return MakeLocation(x, y, 0)
 }
 
+// PerpindicularLocation ...
+func PerpindicularLocation(buffer float64, b, a Marker) Location {
+	d := b.Radius() + buffer
+	r := Radians(b, a)
+
+	bx, by := b.Coords()
+	x := bx + (d * math.Cos((math.Pi/2.0)+r))
+	y := by + (d * math.Sin((math.Pi/2.0)-r))
+
+	return MakeLocation(x, y, 0)
+}
+
 // Obstacles demonstrates how the player might determine if the path
 // between two enitities is clear
 func Obstacles(ms []Marker, b, a Marker) bool {
-	x1, y1 := b.Coords()
-	x2, y2 := a.Coords()
-	dx := x2 - x1
-	dy := y2 - y1
+	bx, by := b.Coords()
+	ax, ay := a.Coords()
+	dx := ax - bx
+	dy := ay - by
 	ptA := dx*dx + dy*dy + 1e-8
-	crossterms := x1*x1 - x1*x2 + y1*y1 - y1*y2
+	crossterms := bx*bx - bx*ax + by*by - by*ay
 
-	for _, e := range ms {
-		x0, y0 := e.Coords()
-		if x0 == x1 || x0 == x2 {
+	for _, po := range ms {
+		pox, poy := po.Coords()
+
+		if (pox == bx && poy == by) || (pox == ax && poy == ay) {
 			continue
 		}
 
-		closestDistance := EdgeDistance(a, e)
-		if closestDistance < e.Radius()+1 {
+		closestDistance := EdgeDistance(a, po)
+		if closestDistance < 0 {
 			return true
 		}
 
-		ptB := -2 * (crossterms + x0*dx + y0*dy)
+		ptB := -2 * (crossterms + pox*dx + poy*dy)
 		t := -ptB / (2 * ptA)
 
 		if t <= 0 || t >= 1 {
 			continue
 		}
 
-		closestX := x1 + dx*t
-		closestY := x2 + dy*t
-		closestDistance = math.Sqrt(math.Pow(closestX-x0, 2) * +math.Pow(closestY-y0, 2))
+		closestX := bx + dx*t
+		closestY := ax + dy*t
+		closestDistance = math.Sqrt(math.Pow(closestX-pox, 2) * +math.Pow(closestY-poy, 2))
 
-		if closestDistance <= e.Radius()+b.Radius()+1 {
+		if closestDistance <= po.Radius()+b.Radius()+1 {
 			return true
 		}
 	}
