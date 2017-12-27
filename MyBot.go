@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/codemodus/sigmon"
-	"github.com/daved/halitego/internal/bot/fred"
+	"github.com/daved/halitego/internal/bot/hyena"
 	"github.com/daved/halitego/ops"
 )
 
@@ -18,8 +18,8 @@ func main() {
 	sm.Run()
 
 	l := log.New(ioutil.Discard, "", 0)
-	o := ops.New("Fred The SpaceGopher")
-	c := fred.New(l, o.InitialBoard())
+	o := ops.New("Hyena")
+	c := hyena.New(l, o.InitialBoard())
 
 	if true {
 		fn := fmt.Sprintf("%d_%s", o.ID(), "game.log")

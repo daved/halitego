@@ -1,15 +1,14 @@
-package fred
+package ops
 
 import (
 	"sort"
 
 	"github.com/daved/halitego/geom"
-	"github.com/daved/halitego/ops"
 )
 
-// planetsByProximity orders all planets based on their proximity
+// PlanetsByProximity orders all planets based on their proximity
 // to a given ship from nearest for farthest
-func planetsByProximity(b ops.Board, l geom.Marker) []ops.Planet {
+func PlanetsByProximity(b Board, l geom.Marker) []Planet {
 	pscs := makePlanetScans(b.Planets(), l)
 	pscs.sortByDistance()
 
@@ -17,14 +16,14 @@ func planetsByProximity(b ops.Board, l geom.Marker) []ops.Planet {
 }
 
 type planetScan struct {
-	ops.Planet
+	Planet
 
 	dist float64
 }
 
 type planetScans []planetScan
 
-func makePlanetScans(ps []ops.Planet, l geom.Marker) planetScans {
+func makePlanetScans(ps []Planet, l geom.Marker) planetScans {
 	var pscs []planetScan
 	for _, p := range ps {
 		psc := planetScan{
@@ -41,8 +40,8 @@ func (ss planetScans) sortByDistance() {
 	sort.Sort(planetScansDistanceSort(ss))
 }
 
-func (ss planetScans) planets() []ops.Planet {
-	var ps []ops.Planet
+func (ss planetScans) planets() []Planet {
+	var ps []Planet
 	for _, s := range ss {
 		ps = append(ps, s.Planet)
 	}

@@ -44,6 +44,7 @@ func makePlanet(tokens []string) (Planet, []string) {
 	return p, tokens[11+shipCt:]
 }
 
+// Owned ...
 func (p Planet) Owned() bool {
 	return p.owned > 0
 }
