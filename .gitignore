@@ -1,4 +1,4 @@
 *.log
 replay*.hlt
 /vendor
-/src
+*.zip
