@@ -89,6 +89,13 @@ func (bot *Hyena) altMsg(err error, striking bool, bps bpsLoad) (ops.CommandMess
 		return bot.nav(bps.b, geom.BufferedLocation(2, bps.p, bps.s), bps.s), true
 	}
 
+	if striking {
+		ss := bps.b.Ships()[bps.p.Owner()]
+		s := ss[bot.rng.Intn(len(ss)-1)]
+
+		return bot.nav(bps.b, s, bps.s), true
+	}
+
 	return bps.s.NoOp(), true
 }
 
