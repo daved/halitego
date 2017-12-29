@@ -13,13 +13,13 @@ cp ./cmd/gopherbot/main.go ${pdir}/${mfile}
 cp -a ./vendor/* ${sdir}
 cp -a ./geom ./internal/* ./ops ${hdir}
 
-pushd ${pdir}
+pushd ${pdir} > /dev/null
 
 sed -i 's#/internal/#/#g' ${mfile}
 
-zip -r ${zfile} ./*
+zip -r ${zfile} ./* > /dev/null
 mv ${zfile} ../
 
-popd
+popd > /dev/null
 
 rm -rf ${pdir}
