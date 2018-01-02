@@ -11,6 +11,16 @@ type Entity struct {
 	geom.Location
 }
 
+// MakeEntity ...
+func MakeEntity(x, y, radius, health float64, id, owner int) Entity {
+	return Entity{
+		id:       id,
+		owner:    owner,
+		health:   health,
+		Location: geom.MakeLocation(x, y, radius),
+	}
+}
+
 // ID ...
 func (e Entity) ID() int {
 	return e.id
