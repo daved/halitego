@@ -13,55 +13,55 @@ import (
 )
 
 var (
-	alpha = uint8(0xFF)
-	red   = icolor.RGBA{0xFF, 0x00, 0x00, alpha}
-	pur   = icolor.RGBA{0xFF, 0x00, 0x99, alpha}
-	blu   = icolor.RGBA{0x00, 0x00, 0xFF, alpha}
-	ora   = icolor.RGBA{0xFF, 0xA5, 0x00, alpha}
-	yel   = icolor.RGBA{0xFF, 0xFF, 0x00, alpha}
+	opaq = uint8(0xFF)
+	tran = uint8(0x80)
+	redo = icolor.RGBA{0xFF, 0x00, 0x00, opaq}
+	redt = altAlpha(redo, tran)
+	puro = icolor.RGBA{0xFF, 0x00, 0x99, opaq}
+	purt = altAlpha(puro, tran)
+	bluo = icolor.RGBA{0x00, 0x00, 0xFF, opaq}
+	blut = altAlpha(bluo, tran)
+	orao = icolor.RGBA{0xFF, 0xA5, 0x00, opaq}
+	orat = altAlpha(orao, tran)
+	yelo = icolor.RGBA{0xFF, 0xFF, 0x00, opaq}
+	yelt = altAlpha(yelo, tran)
 
 	pSm, pMd, pLg = 15.0, 20.0, 25.0
 	sMd           = 2.0
-	tMd           = 2.0
+	lMd           = 2.0
 
 	rng = rand.New(rand.NewSource(time.Now().Unix()))
 
-	xaxis = 0
-	yaxis = 1
+	xaxis, yaxis = 0, 1
 )
 
-func init() {
-	_ = xaxis
-	_ = yaxis
+func altAlpha(rgba icolor.RGBA, alpha uint8) icolor.RGBA {
+	rgba.A = alpha
+	return rgba
 }
 
 func main() {
 	c := newGraphicContext(400, 300)
 
-	destPlanet := makeEntity(100, 250, pSm, pur)
+	destPlanet := makeEntity(100, 250, pSm, puro)
 	planets := []entity{
-		makeEntity(100, 40, pSm, red),
-		makeEntity(200, 80, pMd, red),
-		makeEntity(150, 120, pLg, red),
-		makeEntity(160, 160, pLg, red),
-		makeEntity(175, 200, pLg, red),
-		makeEntity(185, 210, pLg, red),
-		makeEntity(165, 190, pLg, red),
-		makeEntity(340, 240, pSm, red),
-		makeEntity(240, 240, pSm, red),
-		makeEntity(40, 220, pMd, red),
-		makeEntity(40, 260, pMd, red),
-		makeEntity(40, 300, pMd, red),
+		makeEntity(100, 40, pSm, redo),
+		makeEntity(200, 80, pMd, redo),
+		makeEntity(150, 120, pLg, redo),
+		makeEntity(175, 200, pLg, redo),
+		makeEntity(340, 240, pSm, redo),
+		makeEntity(240, 240, pSm, redo),
+		makeEntity(40, 260, pMd, redo),
 		destPlanet,
 	}
-	c.addEntities(planets...)
+	c.addDrawers(entsToDrawers(planets)...)
 
-	ship := makeEntity(160, 130, sMd, blu)
-	c.addEntities(ship)
+	ship := makeEntity(260, 140, sMd, bluo)
+	c.addDrawers(ship)
 
 	dest := geom.BufferedLocation(10, destPlanet, ship)
-	destMarker := makeEntityFromMarker(dest, yel)
-	c.addEntities(destMarker)
+	destMarker := makeEntityFromMarker(dest, yelo)
+	c.addDrawers(destMarker)
 
 	var adj func(int, []entity, geom.Marker, geom.Marker)
 	adj = func(count int, ents []entity, t, s geom.Marker) {
@@ -70,7 +70,7 @@ func main() {
 			return
 		}
 
-		ob := geom.Obstacles(entsToMarkers(ents), t, s)
+		ob := c.obstacles(entsToMarkers(ents), t, s)
 		if !ob {
 			return
 		}
@@ -82,8 +82,8 @@ func main() {
 		}
 
 		t = geom.PerpindicularLocation(buf, dir, t, ship)
-		destMarker = makeEntityFromMarker(t, ora)
-		c.addEntities(destMarker)
+		destMarker = makeEntityFromMarker(t, orao)
+		c.addDrawers(destMarker)
 
 		adj(count, ents, t, s)
 	}
@@ -93,34 +93,40 @@ func main() {
 	_ = c.save("out.png")
 }
 
+type drawer interface {
+	draw(*draw2dimg.GraphicContext)
+}
+
 type graphicContext struct {
 	dest *image.RGBA
 	*draw2dimg.GraphicContext
-	ents  []entity
-	lines []line
+	drawers []drawer
 }
 
 func newGraphicContext(x, y int) *graphicContext {
 	dest := image.NewRGBA(image.Rect(0, 0, x, y))
 
-	gctx := &graphicContext{
+	c := &graphicContext{
 		dest:           dest,
 		GraphicContext: draw2dimg.NewGraphicContext(dest),
 	}
 
-	gctx.SetLineWidth(1)
+	c.SetLineWidth(1)
 
-	return gctx
+	return c
 }
 
-/*func (ctx *graphicContext) obstacles(ms []geom.Marker, b, a geom.Marker) bool {
+func (c *graphicContext) obstacles(ms []geom.Marker, b, a geom.Marker) bool {
 	bx, by := b.Coords()
 	ax, ay := a.Coords()
 
-	pfl := PerpindicularLocation(-b.Radius()+a.Radius(), Left, b, a)
-	pfr := PerpindicularLocation(-b.Radius()+a.Radius(), Right, b, a)
-	pbl := PerpindicularLocation(0, Right, a, b)
-	pbr := PerpindicularLocation(0, Left, a, b)
+	pfl := geom.PerpindicularLocation(-b.Radius()+a.Radius(), geom.Left, b, a)
+	pfr := geom.PerpindicularLocation(-b.Radius()+a.Radius(), geom.Right, b, a)
+	pbr := geom.PerpindicularLocation(0, geom.Left, a, b)
+	pbl := geom.PerpindicularLocation(0, geom.Right, a, b)
+
+	cs := makeCoordsFromGeomLocators(pfl, pfr, pbr, pbl)
+	c.addDrawers(makePoly(cs, purt))
 
 	for _, po := range ms {
 		pox, poy := po.Coords()
@@ -130,24 +136,22 @@ func newGraphicContext(x, y int) *graphicContext {
 
 		poxa, poxb := pox-po.Radius(), pox+po.Radius()
 		poya, poyb := poy+po.Radius(), poy-po.Radius()
-
+		_, _, _, _ = poxa, poxb, poya, poyb
 	}
 
 	return false
-}*/
-
-func (ctx *graphicContext) save(filename string) error {
-	for _, v := range ctx.ents {
-		v.draw(ctx.GraphicContext)
-	}
-
-	ctx.Close()
-
-	return draw2dimg.SaveToPngFile(filename, ctx.dest)
 }
 
-func (ctx *graphicContext) addEntities(ents ...entity) {
-	ctx.ents = append(ctx.ents, ents...)
+func (c *graphicContext) save(filename string) error {
+	for _, v := range c.drawers {
+		v.draw(c.GraphicContext)
+	}
+
+	return draw2dimg.SaveToPngFile(filename, c.dest)
+}
+
+func (c *graphicContext) addDrawers(ents ...drawer) {
+	c.drawers = append(c.drawers, ents...)
 }
 
 type entity struct {
@@ -166,13 +170,13 @@ func makeEntityFromMarker(m geom.Marker, color icolor.Color) entity {
 	x, y := m.Coords()
 	r := m.Radius()
 	if r == 0 {
-		r = tMd
+		r = lMd
 	}
 
 	return makeEntity(x, y, r, color)
 }
 
-func (e *entity) draw(gctx *draw2dimg.GraphicContext) {
+func (e entity) draw(gctx *draw2dimg.GraphicContext) {
 	gctx.SetFillColor(e.Color)
 
 	cx, cy := e.Coords()
@@ -187,6 +191,15 @@ func entsToMarkers(ents []entity) []geom.Marker {
 	}
 
 	return ms
+}
+
+func entsToDrawers(ents []entity) []drawer {
+	var ds []drawer
+	for _, v := range ents {
+		ds = append(ds, v)
+	}
+
+	return ds
 }
 
 type line struct {
@@ -204,7 +217,7 @@ func makeLine(a, b float64, axis int, color icolor.Color) line {
 	}
 }
 
-func (l *line) draw(gctx *draw2dimg.GraphicContext) {
+func (l line) draw(gctx *draw2dimg.GraphicContext) {
 	gctx.SetFillColor(l.Color)
 
 	x1, y1 := l.a, 0.0
@@ -216,5 +229,47 @@ func (l *line) draw(gctx *draw2dimg.GraphicContext) {
 	}
 
 	draw2dkit.Rectangle(gctx, x1, y1, x2, y2)
+	gctx.FillStroke()
+}
+
+type coord struct {
+	x, y float64
+}
+
+func makeCoordsFromGeomLocators(ls ...geom.Locator) []coord {
+	var cs []coord
+	for _, v := range ls {
+		x, y := v.Coords()
+		cs = append(cs, coord{x, y})
+	}
+
+	return cs
+}
+
+type poly struct {
+	cs []coord
+	icolor.Color
+}
+
+func makePoly(cs []coord, color icolor.Color) poly {
+	return poly{
+		cs:    cs,
+		Color: color,
+	}
+}
+
+func (p poly) draw(gctx *draw2dimg.GraphicContext) {
+	gctx.SetFillColor(p.Color)
+
+	if len(p.cs) < 3 {
+		return
+	}
+
+	gctx.MoveTo(p.cs[0].x, p.cs[0].y)
+	for _, v := range p.cs[1:] {
+		gctx.LineTo(v.x, v.y)
+	}
+	gctx.Close()
+
 	gctx.FillStroke()
 }
