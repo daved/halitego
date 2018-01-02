@@ -4,6 +4,15 @@ import (
 	"math"
 )
 
+// Direction ...
+type Direction int
+
+// Direction constants.
+const (
+	Left Direction = iota
+	Right
+)
+
 // Locator describes types which are able to show their coordinates.
 type Locator interface {
 	Coords() (float64, float64)
@@ -74,13 +83,18 @@ func BufferedLocation(buffer float64, b, a Marker) Location {
 }
 
 // PerpindicularLocation ...
-func PerpindicularLocation(buffer float64, b, a Marker) Location {
+func PerpindicularLocation(buffer float64, dir Direction, b, a Marker) Location {
 	d := b.Radius() + buffer
 	r := Radians(b, a)
-
 	bx, by := b.Coords()
-	x := bx + (d * math.Cos((math.Pi/2.0)+r))
-	y := by + (d * math.Sin((math.Pi/2.0)-r))
+
+	dMult := 1.0
+	if dir == Left {
+		dMult = -1.0
+	}
+
+	x := bx + ((d * math.Cos((math.Pi/2.0)+r)) * dMult)
+	y := by + ((d * math.Sin((math.Pi/2.0)-r)) * dMult)
 
 	return MakeLocation(x, y, 0)
 }

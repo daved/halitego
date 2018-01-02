@@ -86,14 +86,14 @@ func (bot *Hyena) altMsg(err error, striking bool, bps bpsLoad) (ops.CommandMess
 	}
 
 	if derr.NoJuncture() {
-		return bot.nav(bps.b, geom.BufferedLocation(2, bps.p, bps.s), bps.s), true
+		return bot.nav(0, bps.b, geom.BufferedLocation(2, bps.p, bps.s), bps.s), true
 	}
 
 	if striking {
 		ss := bps.b.Ships()[bps.p.Owner()]
 		s := ss[bot.rng.Intn(len(ss)-1)]
 
-		return bot.nav(bps.b, s, bps.s), true
+		return bot.nav(0, bps.b, s, bps.s), true
 	}
 
 	return bps.s.NoOp(), true
@@ -101,7 +101,12 @@ func (bot *Hyena) altMsg(err error, striking bool, bps bpsLoad) (ops.CommandMess
 
 // nav demonstrates how the player might negotiate obsticles between
 // a ship and its target
-func (bot *Hyena) nav(b ops.Board, target geom.Marker, s ops.Ship) ops.CommandMessenger {
+func (bot *Hyena) nav(trial int, b ops.Board, target geom.Marker, s ops.Ship) ops.CommandMessenger {
+	trial++
+	if trial > 256 {
+		return s.NoOp()
+	}
+
 	ms := b.Markers()
 	ob := geom.Obstacles(ms, target, s)
 	if !ob {
@@ -109,12 +114,13 @@ func (bot *Hyena) nav(b ops.Board, target geom.Marker, s ops.Ship) ops.CommandMe
 	}
 
 	buf := float64(bot.rng.Intn(23) + 17)
+	dir := geom.Left
 	if time.Now().Nanosecond()%2 == 0 {
-		buf *= -1
+		dir = geom.Right
 	}
 
-	pl := geom.PerpindicularLocation(buf, target, s)
-	return bot.nav(b, pl, s)
+	pl := geom.PerpindicularLocation(buf, dir, target, s)
+	return bot.nav(trial, b, pl, s)
 }
 
 func (bot *Hyena) allOwned(ps []ops.Planet) bool {
