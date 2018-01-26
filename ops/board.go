@@ -72,9 +72,32 @@ func (b *Board) Planets() []Planet {
 	return b.ps
 }
 
+// PlanetsMarkers ...
+func (b *Board) PlanetsMarkers() []geom.Marker {
+	var ms []geom.Marker
+	for _, v := range b.Planets() {
+		ms = append(ms, v)
+	}
+
+	return ms
+}
+
 // Ships ...
 func (b *Board) Ships() [][]Ship {
 	return b.ss
+}
+
+// ShipsMarkers ...
+func (b *Board) ShipsMarkers() [][]geom.Marker {
+	var ms [][]geom.Marker
+	for i, g := range b.Ships() {
+		ms = append(ms, []geom.Marker{})
+		for _, v := range g {
+			ms[i] = append(ms[i], v)
+		}
+	}
+
+	return ms
 }
 
 // Markers ...

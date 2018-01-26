@@ -35,7 +35,7 @@ func (bot *Hyena) Command(b ops.Board, id int) ops.CommandMessengers {
 	var ms ops.CommandMessengers
 
 	for _, s := range ss {
-		ms = append(ms, bot.messenger(b, s))
+		ms = append(ms, bot.messenger(b, id, s))
 	}
 
 	return ms
@@ -43,7 +43,7 @@ func (bot *Hyena) Command(b ops.Board, id int) ops.CommandMessengers {
 
 // messenger demonstrates how the player might direct their ships
 // in achieving victory
-func (bot *Hyena) messenger(b ops.Board, s ops.Ship) ops.CommandMessenger {
+func (bot *Hyena) messenger(b ops.Board, id int, s ops.Ship) ops.CommandMessenger {
 	if s.DockingStatus() != ops.Undocked {
 		return s.NoOp()
 	}
@@ -57,7 +57,7 @@ func (bot *Hyena) messenger(b ops.Board, s ops.Ship) ops.CommandMessenger {
 			return msg
 		}
 
-		if aMsg, ok := bot.altMsg(err, striking, bpsLoad{b, p, s}); ok {
+		if aMsg, ok := bot.altMsg(err, id, striking, bpsLoad{b, p, s}); ok {
 			return aMsg
 		}
 	}
@@ -71,7 +71,7 @@ type bpsLoad struct {
 	s ops.Ship
 }
 
-func (bot *Hyena) altMsg(err error, striking bool, bps bpsLoad) (ops.CommandMessenger, bool) {
+func (bot *Hyena) altMsg(err error, id int, striking bool, bps bpsLoad) (ops.CommandMessenger, bool) {
 	derr, ok := err.(ops.DockingError)
 	if !ok {
 		return bps.s.NoOp(), true
@@ -86,41 +86,42 @@ func (bot *Hyena) altMsg(err error, striking bool, bps bpsLoad) (ops.CommandMess
 	}
 
 	if derr.NoJuncture() {
-		return bot.nav(0, bps.b, geom.BufferedLocation(2, bps.p, bps.s), bps.s), true
+		return bot.nav(0, bps.b, id, geom.BufferedLocation(2, bps.p, bps.s), bps.s), true
 	}
 
 	if striking {
 		ss := bps.b.Ships()[bps.p.Owner()]
 		s := ss[bot.rng.Intn(len(ss)-1)]
 
-		return bot.nav(0, bps.b, s, bps.s), true
+		return bot.nav(0, bps.b, id, s, bps.s), true
 	}
 
 	return bps.s.NoOp(), true
 }
 
-// nav demonstrates how the player might negotiate obsticles between
+// nav demonstrates how the player might negotiate obstacles between
 // a ship and its target
-func (bot *Hyena) nav(trial int, b ops.Board, target geom.Marker, s ops.Ship) ops.CommandMessenger {
+func (bot *Hyena) nav(trial int, b ops.Board, id int, target geom.Marker, s ops.Ship) ops.CommandMessenger {
 	trial++
 	if trial > 256 {
 		return s.NoOp()
 	}
 
-	ms := b.Markers()
+	ms := append(b.PlanetsMarkers(), b.ShipsMarkers()[id]...)
 	ob := geom.Obstacles(ms, target, s)
 	if !ob {
+		bot.l.Printf("clear to nav")
 		return s.Navigate(target)
 	}
 
-	buf := float64(bot.rng.Intn(23) + 17)
+	buf := float64(bot.rng.Intn(24) + 24)
 	dir := geom.Left
 	if time.Now().Nanosecond()%2 == 0 {
 		dir = geom.Right
 	}
 
 	pl := geom.PerpindicularLocation(buf, dir, target, s)
-	return bot.nav(trial, b, pl, s)
+	return bot.nav(trial, b, id, pl, s)
 }
 
 func (bot *Hyena) allOwned(ps []ops.Planet) bool {

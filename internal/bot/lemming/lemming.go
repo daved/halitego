@@ -35,7 +35,7 @@ func (bot *Lemming) Command(b ops.Board, id int) ops.CommandMessengers {
 	var ms ops.CommandMessengers
 
 	for _, s := range ss {
-		ms = append(ms, bot.messenger(b, s))
+		ms = append(ms, bot.messenger(b, id, s))
 	}
 
 	return ms
@@ -43,7 +43,7 @@ func (bot *Lemming) Command(b ops.Board, id int) ops.CommandMessengers {
 
 // messenger demonstrates how the player might direct their ships
 // in achieving victory
-func (bot *Lemming) messenger(b ops.Board, s ops.Ship) ops.CommandMessenger {
+func (bot *Lemming) messenger(b ops.Board, id int, s ops.Ship) ops.CommandMessenger {
 	if s.DockingStatus() != ops.Undocked {
 		return s.NoOp()
 	}
@@ -58,11 +58,9 @@ func (bot *Lemming) messenger(b ops.Board, s ops.Ship) ops.CommandMessenger {
 		derr, ok := err.(ops.DockingError)
 		if ok && (derr.NoRights() || derr.NoPorts()) {
 			continue
-
 		}
 		if ok && derr.NoJuncture() {
-			return bot.nav(b, geom.BufferedLocation(2, p, s), s)
-
+			return bot.nav(0, b, id, geom.BufferedLocation(2, p, s), s)
 		}
 	}
 
@@ -71,18 +69,24 @@ func (bot *Lemming) messenger(b ops.Board, s ops.Ship) ops.CommandMessenger {
 
 // nav demonstrates how the player might negotiate obsticles between
 // a ship and its target
-func (bot *Lemming) nav(b ops.Board, target geom.Marker, s ops.Ship) ops.CommandMessenger {
-	ms := b.Markers()
+func (bot *Lemming) nav(trial int, b ops.Board, id int, target geom.Marker, s ops.Ship) ops.CommandMessenger {
+	trial++
+	if trial > 256 {
+		return s.NoOp()
+	}
+
+	ms := append(b.Markers(), b.ShipsMarkers()[id]...)
 	ob := geom.Obstacles(ms, target, s)
 	if !ob {
 		return s.Navigate(target)
 	}
 
-	buf := float64(bot.rng.Intn(23) + 17)
+	buf := float64(bot.rng.Intn(24) + 24)
+	dir := geom.Left
 	if time.Now().Nanosecond()%2 == 0 {
-		buf *= -1
+		dir = geom.Right
 	}
-	pl := geom.PerpindicularLocation(buf, target, s)
+	pl := geom.PerpindicularLocation(buf, dir, target, s)
 
-	return bot.nav(b, pl, s)
+	return bot.nav(trial, b, id, pl, s)
 }

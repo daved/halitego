@@ -59,7 +59,7 @@ func main() {
 	}
 	c.addDrawers(entsToDrawers(planets)...)
 
-	ship := makeEntity(260, 140, sMd, bluo)
+	ship := makeEntity(175, 173, sMd, bluo)
 	c.addDrawers(ship)
 
 	dest := geom.BufferedLocation(10, destPlanet, ship)
@@ -73,12 +73,12 @@ func main() {
 			return
 		}
 
-		ob := c.obstacles(entsToMarkers(ents), t, s)
+		ob := geom.Obstacles(entsToMarkers(ents), t, s)
 		if !ob {
 			return
 		}
 
-		buf := float64(rng.Intn(23) + 17)
+		buf := float64(rng.Intn(24) + 24)
 		dir := geom.Left
 		if time.Now().Nanosecond()%2 == 0 {
 			dir = geom.Right
