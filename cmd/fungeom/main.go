@@ -14,7 +14,7 @@ import (
 
 var (
 	opaq = uint8(0xFF)
-	tran = uint8(0x80)
+	tran = uint8(0x60)
 	redo = icolor.RGBA{0xFF, 0x00, 0x00, opaq}
 	redt = altAlpha(redo, tran)
 	puro = icolor.RGBA{0xFF, 0x00, 0x99, opaq}
@@ -26,6 +26,8 @@ var (
 	yelo = icolor.RGBA{0xFF, 0xFF, 0x00, opaq}
 	yelt = altAlpha(yelo, tran)
 
+	_, _, _, _, _, _, _, _, _, _ = redo, redt, puro, purt, bluo, blut, orao, orat, yelo, yelt
+
 	pSm, pMd, pLg = 15.0, 20.0, 25.0
 	sMd           = 2.0
 	lMd           = 2.0
@@ -33,6 +35,7 @@ var (
 	rng = rand.New(rand.NewSource(time.Now().Unix()))
 
 	xaxis, yaxis = 0, 1
+	_, _         = xaxis, yaxis
 )
 
 func altAlpha(rgba icolor.RGBA, alpha uint8) icolor.RGBA {
@@ -116,32 +119,6 @@ func newGraphicContext(x, y int) *graphicContext {
 	return c
 }
 
-func (c *graphicContext) obstacles(ms []geom.Marker, b, a geom.Marker) bool {
-	bx, by := b.Coords()
-	ax, ay := a.Coords()
-
-	pfl := geom.PerpindicularLocation(-b.Radius()+a.Radius(), geom.Left, b, a)
-	pfr := geom.PerpindicularLocation(-b.Radius()+a.Radius(), geom.Right, b, a)
-	pbr := geom.PerpindicularLocation(0, geom.Left, a, b)
-	pbl := geom.PerpindicularLocation(0, geom.Right, a, b)
-
-	cs := makeCoordsFromGeomLocators(pfl, pfr, pbr, pbl)
-	c.addDrawers(makePoly(cs, purt))
-
-	for _, po := range ms {
-		pox, poy := po.Coords()
-		if (pox == bx && poy == by) || (pox == ax && poy == ay) {
-			continue
-		}
-
-		poxa, poxb := pox-po.Radius(), pox+po.Radius()
-		poya, poyb := poy+po.Radius(), poy-po.Radius()
-		_, _, _, _ = poxa, poxb, poya, poyb
-	}
-
-	return false
-}
-
 func (c *graphicContext) save(filename string) error {
 	for _, v := range c.drawers {
 		v.draw(c.GraphicContext)
@@ -216,6 +193,8 @@ func makeLine(a, b float64, axis int, color icolor.Color) line {
 		Color: color,
 	}
 }
+
+var _ = makeLine(0, 0, 0, blut)
 
 func (l line) draw(gctx *draw2dimg.GraphicContext) {
 	gctx.SetFillColor(l.Color)
